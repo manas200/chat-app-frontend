@@ -11,8 +11,8 @@ import Cookies from "js-cookie";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 
-export const user_service = "http://localhost:5000";
-export const chat_service = "http://localhost:5002";
+export const user_service = "https://chat-app-backend-user-wjgp.onrender.com";
+export const chat_service = "https://chat-app-backend-chat.onrender.com";
 
 export interface User {
   _id: string;
