@@ -12,12 +12,12 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 
 // For local development
-// export const user_service = "http://localhost:5000";
-// export const chat_service = "http://localhost:5002";
+export const user_service = "http://localhost:5000";
+export const chat_service = "http://localhost:5002";
 
 // For production
-export const user_service = "https://chat-app-backend-user-wjgp.onrender.com";
-export const chat_service = "https://chat-app-backend-chat.onrender.com";
+// export const user_service = "https://chat-app-backend-user-wjgp.onrender.com";
+// export const chat_service = "https://chat-app-backend-chat.onrender.com";
 
 export interface User {
   _id: string;

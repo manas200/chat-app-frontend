@@ -19,7 +19,7 @@ const ChatHeader = ({
   return (
     <>
       {/* mobile menu toggle */}
-      <div className="sm:hidden fixed top-4 right-4 z-30">
+      <div className="sm:hidden fixed top-2.5 right-4 z-30">
         <button
           className="p-3 m-1 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
           onClick={() => setSidebarOpen(true)}
@@ -29,20 +29,20 @@ const ChatHeader = ({
       </div>
 
       {/* chat header */}
-      <div className="mb-6 bg-gray-800 border border-gray-700 p-2 px-3">
-        <div className="flex items-center gap-4">
+      <div className="mb-2 sm:mb-4 bg-gray-800 border border-gray-700 p-2 px-3">
+        <div className="flex items-center gap-3 sm:gap-4">
           {user ? (
             <>
               <div className="relative">
                 <div
-                  className="w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center
+                  className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gray-700 flex items-center justify-center
                 "
                 >
-                  <UserCircle className="w-8 h-8 text-gray-300" />
+                  <UserCircle className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300" />
                 </div>
                 {/* online user setup */}
                 {isOnlineUser && (
-                  <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-gray-800">
+                  <span className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-green-500 border-2 border-gray-800">
                     <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75"></span>
                   </span>
                 )}
@@ -51,7 +51,7 @@ const ChatHeader = ({
               {/* user info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 ">
-                  <h2 className="text-2xl font-bold text-white truncate">
+                  <h2 className="text-lg sm:text-2xl font-bold text-white truncate">
                     {user.name}
                   </h2>
                 </div>
@@ -94,15 +94,15 @@ const ChatHeader = ({
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-gray-700 flex items-center justify-center">
-                <UserCircle className="w-8 h-8 text-gray-300" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gray-700 flex items-center justify-center">
+                <UserCircle className="w-6 h-6 sm:w-8 sm:h-8 text-gray-300" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-400">
+                <h2 className="text-lg sm:text-2xl font-bold text-gray-400">
                   Select a conversation
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
                   Choose a chat from the sidebar to start messaging
                 </p>
               </div>

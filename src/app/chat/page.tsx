@@ -73,6 +73,7 @@ const ChatApp = () => {
   const [replyingToMessage, setReplyingToMessage] = useState<Message | null>(
     null
   );
+  const [forceScrollToBottom, setForceScrollToBottom] = useState(false);
 
   const router = useRouter();
 
@@ -281,6 +282,11 @@ const ChatApp = () => {
 
       setMessage("");
       setReplyingToMessage(null);
+      
+      // Force scroll to bottom after sending message
+      setForceScrollToBottom(true);
+      // Reset the force scroll flag after a brief delay
+      setTimeout(() => setForceScrollToBottom(false), 100);
 
       const displayText = imageFile ? "📷 image" : message;
       moveChatToTop(
@@ -568,7 +574,7 @@ const ChatApp = () => {
   if (loading) return <Loading />;
 
   return (
-    <div className="min-h-screen flex bg-gray-900 text-white relative overflow-hidden">
+    <div className="h-screen flex bg-gray-900 text-white relative overflow-hidden">
       <ChatSidebar
         sidebarOpen={siderbarOpen}
         setSidebarOpen={setSiderbarOpen}
@@ -583,7 +589,7 @@ const ChatApp = () => {
         createChat={createChat}
         onlineUsers={onlineUsers}
       />
-      <div className="flex-1 flex flex-col justify-between bg-gradient-to-br from-gray-900/70 to-black/70 backdrop-blur-xl border-white/10 shadow-2xl">
+      <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-gray-900/70 to-black/70 backdrop-blur-xl border-white/10 shadow-2xl">
         <ChatHeader
           user={user}
           setSidebarOpen={setSiderbarOpen}
@@ -591,7 +597,7 @@ const ChatApp = () => {
           onlineUsers={onlineUsers}
         />
 
-        <div className="p-4">
+        <div className="flex-1 px-2 sm:px-4">
           <ChatMessages
             selectedUser={selectedUser}
             messages={messages}
@@ -600,10 +606,11 @@ const ChatApp = () => {
             onReplyToMessage={handleReplyToMessage}
             onForwardMessage={handleForwardMessage}
             onAddReaction={handleAddReaction}
+            forceScrollToBottom={forceScrollToBottom}
           />
         </div>
 
-        <div className="p-3">
+        <div className="px-2 sm:px-4 pb-2 sm:pb-3 pt-1">
           <MessageInput
             selectedUser={selectedUser}
             message={message}

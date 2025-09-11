@@ -88,11 +88,11 @@ const MessageInput = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-2 border-t border-gray-700 pt-2 relative"
+      className="flex flex-col gap-1 sm:gap-2 border-t border-gray-700 pt-1 sm:pt-2 relative"
     >
       {/* Enhanced Reply Preview */}
       {replyingToMessage && (
-        <div className="bg-gray-800 p-3 rounded-lg mb-2 relative border-l-4 border-blue-500">
+        <div className="bg-gray-800 p-2 sm:p-3 rounded-lg mb-1 sm:mb-2 relative border-l-4 border-blue-500">
           <div className="flex items-start gap-2">
             <Reply className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0" />
             <div className="flex-1 min-w-0">
@@ -175,14 +175,14 @@ const MessageInput = ({
           </button>
 
           {showEmojiPicker && (
-            <div className="absolute bottom-12 left-0 sm:left-0 z-50 transform -translate-x-1/2 sm:translate-x-0">
+            <div className="absolute bottom-12 right-0 sm:left-0 z-50 transform sm:transform-none">
               <EmojiPicker
                 onEmojiClick={onEmojiClick}
                 theme={Theme.DARK}
                 searchDisabled={false}
                 skinTonesDisabled={true}
-                width={280}
-                height={350}
+                width={window.innerWidth > 640 ? 280 : Math.min(280, window.innerWidth - 40)}
+                height={window.innerWidth > 640 ? 350 : 300}
               />
             </div>
           )}

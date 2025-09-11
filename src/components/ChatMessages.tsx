@@ -28,6 +28,7 @@ interface ChatMessagesProps {
   onReplyToMessage?: (message: Message) => void;
   onForwardMessage?: (message: Message) => void;
   onAddReaction?: (messageId: string, emoji: string) => void;
+  forceScrollToBottom?: boolean;
 }
 
 const ChatMessages = React.memo(
@@ -39,6 +40,7 @@ const ChatMessages = React.memo(
     onReplyToMessage,
     onForwardMessage,
     onAddReaction,
+    forceScrollToBottom,
   }: ChatMessagesProps) => {
     const { socket } = SocketData();
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -138,20 +140,47 @@ const ChatMessages = React.memo(
       });
     }, [localMessages]);
 
-    const scrollToBottom = useCallback((smooth: boolean) => {
+    const scrollToBottom = useCallback((smooth: boolean, force: boolean = false) => {
       if (!scrollRef.current || !bottomRef.current) return;
-      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-      if (isNearBottom) {
+      
+      if (force) {
+        // Force scroll to bottom (for new messages/when switching chats)
         bottomRef.current.scrollIntoView({
           behavior: smooth ? "smooth" : "auto",
         });
+      } else {
+        // Only scroll if user is near bottom
+        const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+        if (isNearBottom) {
+          bottomRef.current.scrollIntoView({
+            behavior: smooth ? "smooth" : "auto",
+          });
+        }
       }
     }, []);
 
+    // Force scroll to bottom when switching chats or when chat loads initially
     useEffect(() => {
-      scrollToBottom(true);
-    }, [uniqueMessages, selectedUser, scrollToBottom]);
+      if (selectedUser) {
+        // Force scroll to bottom when switching chats
+        scrollToBottom(false, true);
+      }
+    }, [selectedUser, scrollToBottom]);
+
+    // Auto-scroll for new messages (only if near bottom)
+    useEffect(() => {
+      if (uniqueMessages.length > 0) {
+        scrollToBottom(true, false);
+      }
+    }, [uniqueMessages, scrollToBottom]);
+
+    // Force scroll to bottom when a message is sent (especially when replying to older messages)
+    useEffect(() => {
+      if (forceScrollToBottom) {
+        scrollToBottom(true, true); // Force scroll with smooth animation
+      }
+    }, [forceScrollToBottom, scrollToBottom]);
 
     useEffect(() => {
       const container = scrollRef.current;
@@ -175,7 +204,7 @@ const ChatMessages = React.memo(
       <div className="flex-1 overflow-hidden ">
         <div
           ref={scrollRef}
-          className={`h-full max-h-[calc(100vh-215px)] overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 chat-scroll ${
+          className={`h-full max-h-[calc(100vh-180px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 chat-scroll flex flex-col ${
             showScrollbar ? "show" : ""
           }`}
           style={{
@@ -199,6 +228,8 @@ const ChatMessages = React.memo(
             </div>
           ) : (
             <>
+              {/* Spacer to push messages to bottom */}
+              <div className="flex-grow" />
               {uniqueMessages.map((e) => {
                 const isSentByMe = e.sender === loggedInUser?._id;
                 
@@ -329,7 +360,7 @@ const ChatMessages = React.memo(
 
                       {/* Reaction Picker */}
                       {showReactionPicker === e._id && (
-                        <div className="reaction-picker absolute bottom-full mb-1 left-0 sm:left-0 bg-gray-900/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-2xl z-50 border border-gray-700/50 animate-in slide-in-from-bottom-1 duration-200 transform -translate-x-1/4 sm:translate-x-0">
+                        <div className="reaction-picker absolute bottom-full mb-1 right-0 sm:left-0 bg-gray-900/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-2xl z-50 border border-gray-700/50 animate-in slide-in-from-bottom-1 duration-200 transform translate-x-1/4 sm:translate-x-0">
                           <div className="flex gap-1">
                             {commonEmojis.map((emoji) => (
                               <button
