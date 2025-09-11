@@ -52,16 +52,21 @@ const ChatMessages = React.memo(
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(
     null
   );
+  const [tappedMessage, setTappedMessage] = useState<string | null>(null);
   
-  // Handle clicking outside reaction picker
+  // Handle clicking outside reaction picker and tapped message
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showReactionPicker) {
-        const target = event.target as Element;
-        // Check if the click is outside the reaction picker
-        if (!target.closest('.reaction-picker') && !target.closest('.reaction-button')) {
-          setShowReactionPicker(null);
-        }
+      const target = event.target as Element;
+      
+      // Close reaction picker
+      if (showReactionPicker && !target.closest('.reaction-picker') && !target.closest('.reaction-button')) {
+        setShowReactionPicker(null);
+      }
+      
+      // Close tapped message actions
+      if (tappedMessage && !target.closest('.message-bubble') && !target.closest('.message-actions')) {
+        setTappedMessage(null);
       }
     };
 
@@ -69,7 +74,7 @@ const ChatMessages = React.memo(
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showReactionPicker]);
+  }, [showReactionPicker, tappedMessage]);
 
     useEffect(() => {
       setLocalMessages(messages || []);
@@ -249,11 +254,24 @@ const ChatMessages = React.memo(
                     key={e._id}
                   >
                     <div
-                      className={`relative group rounded-2xl max-w-[280px] sm:max-w-xs lg:max-w-sm text-sm ${
+                      className={`message-bubble relative group rounded-2xl max-w-[280px] sm:max-w-xs lg:max-w-sm text-sm ${
                         isSentByMe
                           ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-br-none"
                           : "bg-white/10 text-gray-100 backdrop-blur-sm rounded-bl-none"
                       } ${e.messageType === "image" ? "p-1" : "px-3 py-2 sm:px-4"}`}
+                      onTouchStart={(event) => {
+                        // Only show actions for received messages (not sent by me)
+                        if (!isSentByMe) {
+                          event.preventDefault();
+                          setTappedMessage(tappedMessage === e._id ? null : e._id);
+                        }
+                      }}
+                      onClick={() => {
+                        // For desktop, only show actions for received messages
+                        if (!isSentByMe && window.innerWidth >= 640) {
+                          // Desktop behavior (keep existing hover)
+                        }
+                      }}
                     >
                       {/* WhatsApp-style Reply Context - INSIDE the message bubble */}
                       {e.messageType === "reply" && e.repliedMessage && (
@@ -309,54 +327,55 @@ const ChatMessages = React.memo(
                         </>
                       )}
 
-                      {/* Message Actions */}
-                      <div className="absolute -top-8 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1 bg-gray-800 rounded-md p-1 shadow-lg touch:opacity-100 md:touch:opacity-0">
-                        {isSentByMe &&
-                          onDeleteMessage &&
-                          e.messageType !== "deleted" && (
+                      {/* Message Actions - Only for received messages (not sent by me) */}
+                      {!isSentByMe && (
+                        <div className={`message-actions absolute -top-6 right-0 flex gap-0.5 bg-gray-800/90 backdrop-blur-sm rounded-md p-0.5 shadow-lg transition-opacity duration-200 ${
+                          window.innerWidth < 640 
+                            ? (tappedMessage === e._id ? 'opacity-100' : 'opacity-0') 
+                            : 'opacity-0 group-hover:opacity-100'
+                        }`}>
+                          {onReplyToMessage && e.messageType !== "deleted" && (
                             <button
-                              onClick={() => onDeleteMessage(e._id)}
-                            className="p-1.5 sm:p-1 bg-gray-700 rounded hover:bg-red-500 transition-colors touch:bg-red-500/80"
-                              title="Delete message"
+                              onClick={() => {
+                                onReplyToMessage(e);
+                                setTappedMessage(null);
+                              }}
+                              className="p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
+                              title="Reply"
                             >
-                              <Trash className="w-3 h-3" />
+                              <Reply className="w-3 h-3" />
                             </button>
                           )}
 
-                        {onReplyToMessage && e.messageType !== "deleted" && (
-                          <button
-                            onClick={() => onReplyToMessage(e)}
-                            className="p-1.5 sm:p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
-                            title="Reply"
-                          >
-                            <Reply className="w-3 h-3" />
-                          </button>
-                        )}
+                          {onAddReaction && e.messageType !== "deleted" && (
+                            <button
+                              onClick={() => {
+                                setShowReactionPicker(
+                                  showReactionPicker === e._id ? null : e._id
+                                );
+                                setTappedMessage(null);
+                              }}
+                              className="reaction-button p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
+                              title="Add reaction"
+                            >
+                              <Smile className="w-3 h-3" />
+                            </button>
+                          )}
 
-                        {onForwardMessage && e.messageType !== "deleted" && (
-                          <button
-                            onClick={() => onForwardMessage(e)}
-                            className="p-1.5 sm:p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
-                            title="Forward"
-                          >
-                            <Forward className="w-3 h-3" />
-                          </button>
-                        )}
-
-                        {onAddReaction && e.messageType !== "deleted" && !isSentByMe && (
-                          <button
-                            onClick={() =>
-                              setShowReactionPicker(
-                                showReactionPicker === e._id ? null : e._id
-                              )
-                            }
-                            className="reaction-button p-1.5 sm:p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
-                            title="Add reaction"
-                          >
-                            <Smile className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
+                          {onForwardMessage && e.messageType !== "deleted" && (
+                            <button
+                              onClick={() => {
+                                onForwardMessage(e);
+                                setTappedMessage(null);
+                              }}
+                              className="p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
+                              title="Forward"
+                            >
+                              <Forward className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
 
                       {/* Reaction Picker */}
                       {showReactionPicker === e._id && (

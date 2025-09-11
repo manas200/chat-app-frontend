@@ -11,6 +11,7 @@ import {
 import React, { useState, useRef, useEffect } from "react";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { Message } from "@/app/chat/page";
+import { useEffect as useReactEffect, useState as useReactState } from "react";
 
 interface MessageInputProps {
   selectedUser: string | null;
@@ -36,6 +37,7 @@ const MessageInput = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: any) => {
@@ -45,7 +47,7 @@ const MessageInput = ({
     console.log("Sending message with reply:", {
       message,
       imageFile: !!imageFile,
-      replyingToMessage: replyingToMessage?._id
+      replyingToMessage: replyingToMessage?._id,
     });
 
     setIsUploading(true);
@@ -65,6 +67,18 @@ const MessageInput = ({
   const onEmojiClick = (emojiData: EmojiClickData) => {
     setMessage(message + emojiData.emoji);
   };
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    checkIsMobile();
+    window.addEventListener("resize", checkIsMobile);
+
+    return () => window.removeEventListener("resize", checkIsMobile);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -150,7 +164,10 @@ const MessageInput = ({
           className="cursor-pointer bg-gray-700 hover:bg-gray-600 rounded-lg px-2 sm:px-3 py-2 transition-colors touch:bg-gray-600"
           title="Attach image"
         >
-          <Paperclip size={16} className="text-gray-300 sm:w-[18px] sm:h-[18px]" />
+          <Paperclip
+            size={16}
+            className="text-gray-300 sm:w-[18px] sm:h-[18px]"
+          />
           <input
             type="file"
             accept="image/*"
@@ -171,18 +188,44 @@ const MessageInput = ({
             onClick={() => setShowEmojiPicker((prev) => !prev)}
             title="Add emoji"
           >
-            <Smile size={16} className="text-gray-300 sm:w-[18px] sm:h-[18px]" />
+            <Smile
+              size={16}
+              className="text-gray-300 sm:w-[18px] sm:h-[18px]"
+            />
           </button>
 
           {showEmojiPicker && (
-            <div className="absolute bottom-12 right-0 sm:left-0 z-50 transform sm:transform-none">
+            <div
+              className={`absolute bottom-12 z-50 ${
+                isMobile
+                  ? "right-0 transform translate-x-full -mr-80"
+                  : "left-0"
+              }`}
+              style={
+                isMobile
+                  ? {
+                      right: "0px",
+                      transform: "translateX(calc(-140% + 10px))", // Position so it fits within screen
+                    }
+                  : {}
+              }
+            >
               <EmojiPicker
                 onEmojiClick={onEmojiClick}
                 theme={Theme.DARK}
                 searchDisabled={false}
                 skinTonesDisabled={true}
-                width={window.innerWidth > 640 ? 280 : Math.min(280, window.innerWidth - 40)}
-                height={window.innerWidth > 640 ? 350 : 300}
+                width={
+                  isMobile
+                    ? Math.min(
+                        280,
+                        (typeof window !== "undefined"
+                          ? window.innerWidth
+                          : 320) - 16
+                      )
+                    : 280
+                }
+                height={isMobile ? 300 : 350}
               />
             </div>
           )}
