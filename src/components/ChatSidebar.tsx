@@ -118,7 +118,7 @@ const ChatSidebar = ({
                 .map((u) => (
                   <button
                     key={u._id}
-                    className="w-full text-left p-4 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors"
+                    className="w-full text-left pl-3 p-2 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors"
                     onClick={() => createChat(u)}
                   >
                     <div className="flex items-center gap-3">

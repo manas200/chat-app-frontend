@@ -32,6 +32,9 @@ export const SocketProvider = ({ children }: ProviderProps) => {
   useEffect(() => {
     if (!user?._id) return;
 
+    console.log("🔌 Connecting to chat service:", chat_service);
+    console.log("👤 User ID for socket:", user._id);
+
     const newSocket = io(chat_service, {
       query: {
         userId: user._id,
@@ -44,10 +47,52 @@ export const SocketProvider = ({ children }: ProviderProps) => {
       setOnlineUsers(users);
     });
 
+    newSocket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
+    });
+
+    newSocket.on("disconnect", (reason) => {
+      console.log("Socket disconnected:", reason);
+    });
+
     return () => {
+      newSocket.off("getOnlineUser");
+      newSocket.off("connect_error");
+      newSocket.off("disconnect");
       newSocket.disconnect();
     };
   }, [user?._id]);
+
+  useEffect(() => {
+    if (!socket || !user?._id) return;
+
+    // Listen for reaction updates - these are handled in the main chat page
+    // This is just for debugging and connection verification
+    const handleMessageReaction = (data: {
+      messageId: string;
+      reactions: any[];
+    }) => {
+      console.log("Socket received reaction update:", data);
+    };
+
+    const handleConnect = () => {
+      console.log("Socket connected successfully:", socket.id);
+    };
+
+    const handleDisconnect = (reason: string) => {
+      console.log("Socket disconnected:", reason);
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("messageReaction", handleMessageReaction);
+    socket.on("disconnect", handleDisconnect);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("messageReaction", handleMessageReaction);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, [socket, user?._id]);
 
   return (
     <SocketContext.Provider value={{ socket, onlineUsers }}>

@@ -12,6 +12,7 @@ import ChatMessages from "@/components/ChatMessages";
 import MessageInput from "@/components/MessageInput";
 import { SocketData } from "@/context/SocketContext";
 
+// In your chat page, update the Message interface
 export interface Message {
   _id: string;
   chatId: string;
@@ -21,11 +22,28 @@ export interface Message {
     url: string;
     publicId: string;
   };
-  messageType: "text" | "image" | "deleted";
+  messageType: "text" | "image" | "deleted" | "reply" | "forward";
   seen: boolean;
-  seenAt?: string;
-  createdAt: string;
-  deleted?: boolean;
+  seenAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  reactions?: {
+    userId: string;
+    emoji: string;
+  }[];
+  replyTo?: string;
+  forwardedFrom?: string;
+  // Fix the type for repliedMessage
+  repliedMessage?: {
+    _id: string;
+    text?: string;
+    sender: string;
+    messageType: "text" | "image" | "deleted"; // Only these three types
+    image?: {
+      url: string;
+      publicId: string;
+    };
+  };
 }
 
 const ChatApp = () => {
@@ -50,6 +68,9 @@ const ChatApp = () => {
   const [showAllUser, setShowAllUser] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [typingTimeOut, setTypingTimeOut] = useState<NodeJS.Timeout | null>(
+    null
+  );
+  const [replyingToMessage, setReplyingToMessage] = useState<Message | null>(
     null
   );
 
@@ -108,6 +129,10 @@ const ChatApp = () => {
               text:
                 newMessage.messageType === "deleted"
                   ? "Message deleted"
+                  : newMessage.messageType === "reply"
+                  ? `↩️ ${newMessage.text}`
+                  : newMessage.messageType === "image"
+                  ? "📷 Image"
                   : newMessage.text,
               sender: newMessage.sender,
             },
@@ -169,7 +194,11 @@ const ChatApp = () => {
     }
   }
 
-  const handleMessageSend = async (e: any, imageFile?: File | null) => {
+  const handleMessageSend = async (
+    e: any,
+    imageFile?: File | null,
+    replyTo?: string
+  ) => {
     e.preventDefault();
 
     if (!message.trim() && !imageFile) return;
@@ -199,6 +228,11 @@ const ChatApp = () => {
         formData.append("image", imageFile);
       }
 
+      if (replyTo) {
+        console.log("Adding replyTo to formData:", replyTo);
+        formData.append("replyTo", replyTo);
+      }
+
       const { data } = await axios.post(
         `${chat_service}/api/v1/message`,
         formData,
@@ -210,24 +244,51 @@ const ChatApp = () => {
         }
       );
 
+      // Ensure we have the repliedMessage data for immediate UI update
+      let messageWithReply = data.message;
+      if (replyTo && !messageWithReply.repliedMessage) {
+        // If backend didn't populate repliedMessage, find the replied message locally
+        const repliedMessage = messages?.find((msg) => msg._id === replyTo);
+        if (repliedMessage) {
+          messageWithReply = {
+            ...messageWithReply,
+            repliedMessage: {
+              _id: repliedMessage._id,
+              text: repliedMessage.text || "",
+              sender: repliedMessage.sender,
+              messageType:
+                repliedMessage.messageType === "image"
+                  ? "image"
+                  : repliedMessage.messageType === "deleted"
+                  ? "deleted"
+                  : "text",
+              image: repliedMessage.image,
+            },
+          };
+        }
+      }
+
       setMessages((prev) => {
         const currentMessages = prev || [];
         const messageExists = currentMessages.some(
-          (msg) => msg._id === data.message._id
+          (msg) => msg._id === messageWithReply._id
         );
         if (!messageExists) {
-          return [...currentMessages, data.message];
+          return [...currentMessages, messageWithReply];
         }
         return currentMessages;
       });
 
       setMessage("");
+      setReplyingToMessage(null);
+
       const displayText = imageFile ? "📷 image" : message;
       moveChatToTop(
         selectedUser!,
         {
           text: displayText,
           sender: data.sender,
+          messageType: data.message.messageType,
         },
         false
       );
@@ -271,10 +332,78 @@ const ChatApp = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setMessages((prev) => prev?.filter((msg) => msg._id !== messageId) || []);
-      socket.emit("deleteMessage", { messageId, chatId: selectedUser });
+      // Update the message to show 'deleted' state locally for immediate feedback
+      setMessages((prev) => {
+        if (!prev) return null;
+        return prev.map((msg) => {
+          if (msg._id === messageId) {
+            return {
+              ...msg,
+              messageType: "deleted" as const,
+              text: "",
+              image: undefined,
+              reactions: [], // Clear reactions when message is deleted
+            };
+          }
+          return msg;
+        });
+      });
+      
+      // Update chat sidebar to show "Message deleted"
+      moveChatToTop(
+        selectedUser,
+        {
+          messageType: "deleted",
+          text: "",
+          sender: loggedInUser?._id,
+        },
+        false
+      );
+      
+      console.log("📤 Message deleted successfully:", messageId);
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to delete message");
+    }
+  };
+
+  // ✅ Handle replying to a message
+  const handleReplyToMessage = (message: Message) => {
+    setReplyingToMessage(message);
+  };
+
+  // ✅ Handle forwarding a message
+  const handleForwardMessage = (message: Message) => {
+    // You can implement a modal or UI for selecting who to forward to
+    toast.success("Forward feature coming soon!");
+  };
+
+  // ✅ Handle adding reaction to a message
+  const handleAddReaction = async (messageId: string, emoji: string) => {
+    if (!socket || !loggedInUser?._id || !selectedUser) {
+      console.error("Missing required data for reaction:", {
+        socket: !!socket,
+        userId: loggedInUser?._id,
+        selectedUser,
+      });
+      return;
+    }
+
+    console.log("Adding reaction:", { messageId, emoji, userId: loggedInUser._id });
+    console.log("Socket connected:", socket.connected);
+    console.log("Socket ID:", socket.id);
+
+    try {
+      // Emit socket event for real-time reaction (socket handler will save to DB)
+      socket.emit("addReaction", {
+        messageId,
+        emoji,
+        userId: loggedInUser._id,
+      });
+      
+      console.log("Reaction emitted via socket");
+    } catch (error: any) {
+      console.error("Error emitting reaction:", error);
+      toast.error("Failed to add reaction");
     }
   };
 
@@ -286,8 +415,29 @@ const ChatApp = () => {
           const messageExists = currentMessages.some(
             (msg) => msg._id === message._id
           );
+
           if (!messageExists) {
-            return [...currentMessages, message];
+            // Ensure repliedMessage has proper structure if it's a reply
+            let formattedMessage = message;
+            if (message.messageType === "reply" && message.repliedMessage) {
+              const repliedMsg = message.repliedMessage;
+              formattedMessage = {
+                ...message,
+                repliedMessage: {
+                  _id: repliedMsg._id,
+                  text: repliedMsg.text || "",
+                  sender: repliedMsg.sender?.toString() || "",
+                  messageType:
+                    repliedMsg.messageType === "image"
+                      ? "image"
+                      : repliedMsg.messageType === "deleted"
+                      ? "deleted"
+                      : "text",
+                  image: repliedMsg.image || undefined,
+                },
+              };
+            }
+            return [...currentMessages, formattedMessage];
           }
           return currentMessages;
         });
@@ -309,10 +459,14 @@ const ChatApp = () => {
               return {
                 ...msg,
                 seen: true,
-                seenAt: new Date().toString(),
+                seenAt: new Date(),
               };
             } else if (msg.sender === loggedInUser?._id && !data.messageIds) {
-              return { ...msg, seen: true, seenAt: new Date().toString() };
+              return {
+                ...msg,
+                seen: true,
+                seenAt: new Date(),
+              };
             }
             return msg;
           });
@@ -322,15 +476,48 @@ const ChatApp = () => {
 
     // ✅ Listen for deleted messages
     socket?.on("messageDeleted", (deletedMessage) => {
+      console.log("📤 Received messageDeleted event:", deletedMessage);
       if (selectedUser === deletedMessage.chatId) {
         setMessages(
-          (prev) =>
-            prev?.map((msg) =>
-              msg._id === deletedMessage._id ? deletedMessage : msg
-            ) || []
+          (prev) => {
+            if (!prev) return null;
+            const updatedMessages = prev.map((msg) =>
+              msg._id === deletedMessage._id 
+                ? {
+                    ...deletedMessage,
+                    messageType: "deleted",
+                    text: "",
+                    image: undefined,
+                    reactions: [], // Ensure reactions are cleared
+                  }
+                : msg
+            );
+            console.log("✅ Message updated to deleted state:", deletedMessage._id);
+            return updatedMessages;
+          }
         );
       }
     });
+
+    // ✅ Listen for reaction updates
+    socket?.on(
+      "messageReaction",
+      (data: { messageId: string; reactions: any[] }) => {
+        console.log("Received reaction update:", data);
+        if (selectedUser) {
+          setMessages((prev) => {
+            if (!prev) return null;
+            const updatedMessages = prev.map((msg) =>
+              msg._id === data.messageId
+                ? { ...msg, reactions: data.reactions }
+                : msg
+            );
+            console.log("Updated messages with reactions:", updatedMessages.find(m => m._id === data.messageId)?.reactions);
+            return updatedMessages;
+          });
+        }
+      }
+    );
 
     socket?.on("userTyping", (data) => {
       if (data.chatId === selectedUser && data.userId !== loggedInUser?._id) {
@@ -348,6 +535,7 @@ const ChatApp = () => {
       socket?.off("newMessage");
       socket?.off("messagesSeen");
       socket?.off("messageDeleted");
+      socket?.off("messageReaction");
       socket?.off("userTyping");
       socket?.off("userStoppedTyping");
     };
@@ -358,11 +546,13 @@ const ChatApp = () => {
       fetchChat();
       setIsTyping(false);
       resetUnseenCount(selectedUser);
+      console.log("Joining chat room:", selectedUser);
       socket?.emit("joinChat", selectedUser);
 
       return () => {
         socket?.emit("leaveChat", selectedUser);
         setMessages(null);
+        setReplyingToMessage(null);
       };
     }
   }, [selectedUser, socket]);
@@ -406,6 +596,10 @@ const ChatApp = () => {
             selectedUser={selectedUser}
             messages={messages}
             loggedInUser={loggedInUser}
+            onDeleteMessage={handleDeleteMessage}
+            onReplyToMessage={handleReplyToMessage}
+            onForwardMessage={handleForwardMessage}
+            onAddReaction={handleAddReaction}
           />
         </div>
 
@@ -415,6 +609,8 @@ const ChatApp = () => {
             message={message}
             setMessage={handleTyping}
             handleMessageSend={handleMessageSend}
+            replyingToMessage={replyingToMessage}
+            setReplyingToMessage={setReplyingToMessage}
           />
         </div>
       </div>

@@ -9,13 +9,25 @@ import React, {
   useCallback,
 } from "react";
 import moment from "moment";
-import { Check, CheckCheck, Zap, Trash } from "lucide-react";
+import {
+  Check,
+  CheckCheck,
+  Zap,
+  Trash,
+  Reply,
+  Forward,
+  Smile,
+  ImageIcon,
+} from "lucide-react";
 
 interface ChatMessagesProps {
   selectedUser: string | null;
   messages: Message[] | null;
   loggedInUser: User | null;
   onDeleteMessage?: (messageId: string) => void;
+  onReplyToMessage?: (message: Message) => void;
+  onForwardMessage?: (message: Message) => void;
+  onAddReaction?: (messageId: string, emoji: string) => void;
 }
 
 const ChatMessages = React.memo(
@@ -24,6 +36,9 @@ const ChatMessages = React.memo(
     messages,
     loggedInUser,
     onDeleteMessage,
+    onReplyToMessage,
+    onForwardMessage,
+    onAddReaction,
   }: ChatMessagesProps) => {
     const { socket } = SocketData();
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -32,13 +47,33 @@ const ChatMessages = React.memo(
     const [localMessages, setLocalMessages] = useState<Message[]>(
       messages || []
     );
+  const [showReactionPicker, setShowReactionPicker] = useState<string | null>(
+    null
+  );
+  
+  // Handle clicking outside reaction picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showReactionPicker) {
+        const target = event.target as Element;
+        // Check if the click is outside the reaction picker
+        if (!target.closest('.reaction-picker') && !target.closest('.reaction-button')) {
+          setShowReactionPicker(null);
+        }
+      }
+    };
 
-    // Sync prop messages with local state
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showReactionPicker]);
+
     useEffect(() => {
       setLocalMessages(messages || []);
     }, [messages]);
 
-    // Socket listener for deleted messages
+    // Socket listener for deleted messages and reactions
     useEffect(() => {
       if (!socket) return;
 
@@ -55,23 +90,45 @@ const ChatMessages = React.memo(
             msg._id === messageId
               ? {
                   ...msg,
-                  deleted: true,
                   text: "",
                   image: undefined,
                   messageType: "deleted",
-                } // ✅ set messageType
+                }
               : msg
           )
         );
       };
 
+      const handleMessageReaction = ({
+        messageId,
+        reactions,
+      }: {
+        messageId: string;
+        reactions: { userId: string; emoji: string }[];
+      }) => {
+        setLocalMessages((prev) =>
+          prev.map((msg) =>
+            msg._id === messageId ? { ...msg, reactions } : msg
+          )
+        );
+      };
+
       socket.on("messageDeleted", handleMessageDeleted);
+      socket.on("messageReaction", handleMessageReaction);
+
       return () => {
         socket.off("messageDeleted", handleMessageDeleted);
+        socket.off("messageReaction", handleMessageReaction);
       };
     }, [socket, selectedUser]);
 
-    // Remove duplicates
+    const handleAddReaction = (messageId: string, emoji: string) => {
+      if (onAddReaction) {
+        onAddReaction(messageId, emoji);
+      }
+      setShowReactionPicker(null);
+    };
+
     const uniqueMessages = useMemo(() => {
       const seen = new Set();
       return localMessages.filter((msg) => {
@@ -81,7 +138,6 @@ const ChatMessages = React.memo(
       });
     }, [localMessages]);
 
-    // Scroll handling
     const scrollToBottom = useCallback((smooth: boolean) => {
       if (!scrollRef.current || !bottomRef.current) return;
       const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
@@ -97,7 +153,6 @@ const ChatMessages = React.memo(
       scrollToBottom(true);
     }, [uniqueMessages, selectedUser, scrollToBottom]);
 
-    // Temporary scrollbar on scroll
     useEffect(() => {
       const container = scrollRef.current;
       if (!container) return;
@@ -114,11 +169,13 @@ const ChatMessages = React.memo(
       };
     }, []);
 
+    const commonEmojis = ["👍", "❤️", "😂", "😮", "😢", "😡"];
+
     return (
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden ">
         <div
           ref={scrollRef}
-          className={`h-full max-h-[calc(100vh-215px)] overflow-y-auto p-2 space-y-2 chat-scroll ${
+          className={`h-full max-h-[calc(100vh-215px)] overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 chat-scroll ${
             showScrollbar ? "show" : ""
           }`}
           style={{
@@ -133,7 +190,7 @@ const ChatMessages = React.memo(
                 <Zap width={120} height={120} />
               </div>
               <h2 className="text-4xl font-semibold text-white mb-5">
-                Welcome to Pulse
+                Welcome, {loggedInUser?.name || "User"}!
               </h2>
               <p className="text-xl text-gray-300 max-w-md">
                 Select a conversation from the sidebar or start a new chat to
@@ -144,20 +201,64 @@ const ChatMessages = React.memo(
             <>
               {uniqueMessages.map((e) => {
                 const isSentByMe = e.sender === loggedInUser?._id;
+                
+                // Debug logging
+                if (e.reactions && e.reactions.length > 0) {
+                  console.log('Message with reactions:', e._id, e.reactions);
+                }
+                if (e.messageType === 'reply') {
+                  console.log('Reply message:', e._id, e.repliedMessage);
+                }
+
                 return (
                   <div
-                    className={`flex flex-col gap-1 mt-2 ${
+                    className={`flex flex-col gap-1 mt-2 group-message ${
                       isSentByMe ? "items-end" : "items-start"
                     }`}
                     key={e._id}
                   >
                     <div
-                      className={`relative group rounded-lg max-w-sm text-sm ${
+                      className={`relative group rounded-2xl max-w-[280px] sm:max-w-xs lg:max-w-sm text-sm ${
                         isSentByMe
-                          ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
-                          : "bg-white/10 text-gray-100 mr-8 backdrop-blur-sm"
-                      } ${e.messageType === "image" ? "p-1" : "px-3 py-2"}`}
+                          ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-br-none"
+                          : "bg-white/10 text-gray-100 backdrop-blur-sm rounded-bl-none"
+                      } ${e.messageType === "image" ? "p-1" : "px-3 py-2 sm:px-4"}`}
                     >
+                      {/* WhatsApp-style Reply Context - INSIDE the message bubble */}
+                      {e.messageType === "reply" && e.repliedMessage && (
+                        <div
+                          className={`mb-2 sm:mb-3 p-1.5 sm:p-2 rounded-md border-l-4 ${
+                            isSentByMe
+                              ? "bg-blue-500/10 border-l-blue-400"
+                              : "bg-gray-500/10 border-l-gray-400"
+                          }`}
+                        >
+                          {/* Sender name */}
+                          <div className="text-xs font-medium mb-1 opacity-90">
+                            {e.repliedMessage.sender === loggedInUser?._id ? "You" : "Other"}
+                          </div>
+                          
+                          {/* Quoted message content */}
+                          <div className="text-sm opacity-75">
+                            {e.repliedMessage.messageType === "image" ? (
+                              <div className="flex items-center gap-2">
+                                <ImageIcon className="w-4 h-4" />
+                                <span>Photo</span>
+                              </div>
+                            ) : e.repliedMessage.messageType === "deleted" ? (
+                              <span className="italic text-gray-400">
+                                This message was deleted
+                              </span>
+                            ) : (
+                              <div className="truncate max-w-xs">
+                                {e.repliedMessage.text || "Message"}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Main message content */}
                       {e.messageType === "deleted" ? (
                         <p className="italic text-gray-300">
                           This message was deleted
@@ -169,30 +270,113 @@ const ChatMessages = React.memo(
                               <img
                                 src={e.image.url}
                                 alt="shared"
-                                className="max-w-full h-auto rounded-lg border border-white/10"
+                                className="max-w-full h-auto rounded-2xl border border-white/10"
                               />
                             </div>
                           )}
-                          {e.text && <p>{e.text}</p>}
+                          {e.text && <p className="break-words">{e.text}</p>}
                         </>
                       )}
 
-                      {isSentByMe &&
-                        onDeleteMessage &&
-                        e.messageType !== "deleted" && (
+                      {/* Message Actions */}
+                      <div className="absolute -top-8 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1 bg-gray-800 rounded-md p-1 shadow-lg touch:opacity-100 md:touch:opacity-0">
+                        {isSentByMe &&
+                          onDeleteMessage &&
+                          e.messageType !== "deleted" && (
+                            <button
+                              onClick={() => onDeleteMessage(e._id)}
+                            className="p-1.5 sm:p-1 bg-gray-700 rounded hover:bg-red-500 transition-colors touch:bg-red-500/80"
+                              title="Delete message"
+                            >
+                              <Trash className="w-3 h-3" />
+                            </button>
+                          )}
+
+                        {onReplyToMessage && e.messageType !== "deleted" && (
                           <button
-                            onClick={() => onDeleteMessage(e._id)}
-                            className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Delete message"
+                            onClick={() => onReplyToMessage(e)}
+                            className="p-1.5 sm:p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                            title="Reply"
                           >
-                            <Trash className="w-4 h-4" />
+                            <Reply className="w-3 h-3" />
                           </button>
                         )}
+
+                        {onForwardMessage && e.messageType !== "deleted" && (
+                          <button
+                            onClick={() => onForwardMessage(e)}
+                            className="p-1.5 sm:p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                            title="Forward"
+                          >
+                            <Forward className="w-3 h-3" />
+                          </button>
+                        )}
+
+                        {onAddReaction && e.messageType !== "deleted" && !isSentByMe && (
+                          <button
+                            onClick={() =>
+                              setShowReactionPicker(
+                                showReactionPicker === e._id ? null : e._id
+                              )
+                            }
+                            className="reaction-button p-1.5 sm:p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors"
+                            title="Add reaction"
+                          >
+                            <Smile className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Reaction Picker */}
+                      {showReactionPicker === e._id && (
+                        <div className="reaction-picker absolute bottom-full mb-1 left-0 sm:left-0 bg-gray-900/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-2xl z-50 border border-gray-700/50 animate-in slide-in-from-bottom-1 duration-200 transform -translate-x-1/4 sm:translate-x-0">
+                          <div className="flex gap-1">
+                            {commonEmojis.map((emoji) => (
+                              <button
+                                key={emoji}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  console.log('Emoji clicked:', emoji, 'for message:', e._id);
+                                  handleAddReaction(e._id, emoji);
+                                }}
+                                className="p-1.5 hover:bg-gray-700/50 rounded-full transition-all duration-150 text-base transform hover:scale-110 active:scale-95 min-w-[28px] h-7 flex items-center justify-center"
+                                title={`React with ${emoji}`}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
+                    {/* Reactions */}
+                    {e.reactions && e.reactions.length > 0 && (
+                      <div
+                        className={`flex flex-wrap gap-1 mt-1.5 ${
+                          isSentByMe ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        {e.reactions.map((reaction, index) => (
+                          <span
+                            key={index}
+                            className={`inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-full border shadow-sm cursor-pointer transition-all duration-200 hover:scale-105 min-h-[20px] ${
+                              reaction.userId === loggedInUser?._id
+                                ? "bg-blue-500/20 border-blue-400/50 text-blue-300"
+                                : "bg-gray-700/80 border-gray-600 text-gray-300 hover:bg-gray-600"
+                            }`}
+                            title={`${reaction.userId === loggedInUser?._id ? 'You' : 'Someone'} reacted with ${reaction.emoji}`}
+                          >
+                            <span className="text-sm leading-none">{reaction.emoji}</span>
+                            <span className="text-[10px] font-medium">1</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     <div
-                      className={`flex items-center gap-1 text-[11px] text-gray-400 ${
-                        isSentByMe ? "pr-2 flex-row-reverse" : "pl-2"
+                      className={`flex items-center gap-1 text-[10px] sm:text-[11px] text-gray-400 mt-1 ${
+                        isSentByMe ? "pr-1 sm:pr-2 flex-row-reverse" : "pl-1 sm:pl-2"
                       }`}
                     >
                       <span>
@@ -217,6 +401,37 @@ const ChatMessages = React.memo(
             </>
           )}
         </div>
+
+        <style jsx>{`
+          .chat-scroll::-webkit-scrollbar {
+            width: 6px;
+          }
+          .chat-scroll::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .chat-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+          }
+          .chat-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+          }
+          
+          /* Mobile touch interactions */
+          @media (max-width: 768px) {
+            .group-message:active .group > div:first-child {
+              opacity: 1 !important;
+            }
+          }
+          
+          /* Better touch targets on mobile */
+          @media (max-width: 640px) {
+            .reaction-picker button {
+              min-width: 32px;
+              min-height: 32px;
+            }
+          }
+        `}</style>
       </div>
     );
   }

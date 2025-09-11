@@ -77,7 +77,7 @@ const ProfilePage = () => {
         </div>
 
         <div className="bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
-          <div className="bg-gray-700 p-8 border-b border-gray-600">
+          <div className="bg-gray-700 p-8 border-b rounded-lg border-gray-600">
             <div className="flex items-center gap-6">
               <div className="relative">
                 <div className="w-20 h-20 rounded-full bg-gray-600 flex items-center justify-center">
