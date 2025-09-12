@@ -91,7 +91,7 @@ const ChatSidebar = ({
       </div>
 
       {/* content */}
-      <div className="flex-1  overflow-hidden px-4 py-2">
+      <div className="flex-1  overflow-hidden px-4 py-4">
         {showAllUsers ? (
           <div className="space-y-4 h-full">
             <div className="relative">

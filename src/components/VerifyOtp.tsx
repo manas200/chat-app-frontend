@@ -145,11 +145,11 @@ const VerifyOtp = () => {
 
         <div className="w-full max-w-md mx-auto">
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold text-white mb-3">
+            <h1 className="text-2xl font-bold text-white mt-7 mb-3">
               Verify Your Email
             </h1>
             <p className="text-gray-400 mb-2">We have sent a 6-digit code to</p>
-            <p className="text-cyan-500 font-medium break-all">{email}</p>
+            <p className="text-blue-400 font-medium break-all">{email}</p>
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">

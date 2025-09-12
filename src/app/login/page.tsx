@@ -69,7 +69,7 @@ const LoginPage = () => {
             <h1 className="text-2xl lg:text-3xl font-bold text-white mb-3">
               Welcome to Pulse
             </h1>
-            <p className="text-gray-400 text-sm lg:text-base">
+            <p className="text-gray-400  lg:text-base">
               Enter your email to continue your journey
             </p>
           </div>

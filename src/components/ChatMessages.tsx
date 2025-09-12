@@ -49,32 +49,40 @@ const ChatMessages = React.memo(
     const [localMessages, setLocalMessages] = useState<Message[]>(
       messages || []
     );
-  const [showReactionPicker, setShowReactionPicker] = useState<string | null>(
-    null
-  );
-  const [tappedMessage, setTappedMessage] = useState<string | null>(null);
-  
-  // Handle clicking outside reaction picker and tapped message
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      
-      // Close reaction picker
-      if (showReactionPicker && !target.closest('.reaction-picker') && !target.closest('.reaction-button')) {
-        setShowReactionPicker(null);
-      }
-      
-      // Close tapped message actions
-      if (tappedMessage && !target.closest('.message-bubble') && !target.closest('.message-actions')) {
-        setTappedMessage(null);
-      }
-    };
+    const [showReactionPicker, setShowReactionPicker] = useState<string | null>(
+      null
+    );
+    const [tappedMessage, setTappedMessage] = useState<string | null>(null);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showReactionPicker, tappedMessage]);
+    // Handle clicking outside reaction picker and tapped message
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        const target = event.target as Element;
+
+        // Close reaction picker
+        if (
+          showReactionPicker &&
+          !target.closest(".reaction-picker") &&
+          !target.closest(".reaction-button")
+        ) {
+          setShowReactionPicker(null);
+        }
+
+        // Close tapped message actions
+        if (
+          tappedMessage &&
+          !target.closest(".message-bubble") &&
+          !target.closest(".message-actions")
+        ) {
+          setTappedMessage(null);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [showReactionPicker, tappedMessage]);
 
     useEffect(() => {
       setLocalMessages(messages || []);
@@ -145,25 +153,28 @@ const ChatMessages = React.memo(
       });
     }, [localMessages]);
 
-    const scrollToBottom = useCallback((smooth: boolean, force: boolean = false) => {
-      if (!scrollRef.current || !bottomRef.current) return;
-      
-      if (force) {
-        // Force scroll to bottom (for new messages/when switching chats)
-        bottomRef.current.scrollIntoView({
-          behavior: smooth ? "smooth" : "auto",
-        });
-      } else {
-        // Only scroll if user is near bottom
-        const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-        if (isNearBottom) {
+    const scrollToBottom = useCallback(
+      (smooth: boolean, force: boolean = false) => {
+        if (!scrollRef.current || !bottomRef.current) return;
+
+        if (force) {
+          // Force scroll to bottom (for new messages/when switching chats)
           bottomRef.current.scrollIntoView({
             behavior: smooth ? "smooth" : "auto",
           });
+        } else {
+          // Only scroll if user is near bottom
+          const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+          const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+          if (isNearBottom) {
+            bottomRef.current.scrollIntoView({
+              behavior: smooth ? "smooth" : "auto",
+            });
+          }
         }
-      }
-    }, []);
+      },
+      []
+    );
 
     // Force scroll to bottom when switching chats or when chat loads initially
     useEffect(() => {
@@ -219,13 +230,18 @@ const ChatMessages = React.memo(
           }}
         >
           {!selectedUser ? (
-            <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <div className="flex flex-col items-center justify-center h-full text-center py-12 px-4">
               <div className="mx-auto w-40 h-40 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-6 shadow-2xl shadow-blue-500/40">
                 <Zap width={120} height={120} />
               </div>
-              <h2 className="text-4xl font-semibold text-white mb-5">
-                Welcome, {loggedInUser?.name || "User"}!
-              </h2>
+              <div className="flex">
+                <h2 className="text-4xl font-semibold text-white mb-5">
+                  Welcome,
+                </h2>
+                <h2 className="text-4xl ml-2 font-semibold text-blue-400 mb-5">
+                  {loggedInUser?.name || "User"}!
+                </h2>
+              </div>
               <p className="text-xl text-gray-300 max-w-md">
                 Select a conversation from the sidebar or start a new chat to
                 begin messaging.
@@ -237,13 +253,13 @@ const ChatMessages = React.memo(
               <div className="flex-grow" />
               {uniqueMessages.map((e) => {
                 const isSentByMe = e.sender === loggedInUser?._id;
-                
+
                 // Debug logging
                 if (e.reactions && e.reactions.length > 0) {
-                  console.log('Message with reactions:', e._id, e.reactions);
+                  console.log("Message with reactions:", e._id, e.reactions);
                 }
-                if (e.messageType === 'reply') {
-                  console.log('Reply message:', e._id, e.repliedMessage);
+                if (e.messageType === "reply") {
+                  console.log("Reply message:", e._id, e.repliedMessage);
                 }
 
                 return (
@@ -258,11 +274,15 @@ const ChatMessages = React.memo(
                         isSentByMe
                           ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-br-none"
                           : "bg-white/10 text-gray-100 backdrop-blur-sm rounded-bl-none"
-                      } ${e.messageType === "image" ? "p-1" : "px-3 py-2 sm:px-4"}`}
+                      } ${
+                        e.messageType === "image" ? "p-1" : "px-3 py-2 sm:px-4"
+                      }`}
                       onTouchStart={(event) => {
                         // Show actions for both sent and received messages
                         event.preventDefault();
-                        setTappedMessage(tappedMessage === e._id ? null : e._id);
+                        setTappedMessage(
+                          tappedMessage === e._id ? null : e._id
+                        );
                       }}
                     >
                       {/* WhatsApp-style Reply Context - INSIDE the message bubble */}
@@ -276,9 +296,11 @@ const ChatMessages = React.memo(
                         >
                           {/* Sender name */}
                           <div className="text-xs font-medium mb-1 opacity-90">
-                            {e.repliedMessage.sender === loggedInUser?._id ? "You" : "Other"}
+                            {e.repliedMessage.sender === loggedInUser?._id
+                              ? "You"
+                              : "Other"}
                           </div>
-                          
+
                           {/* Quoted message content */}
                           <div className="text-sm opacity-75">
                             {e.repliedMessage.messageType === "image" ? (
@@ -320,54 +342,64 @@ const ChatMessages = React.memo(
                       )}
 
                       {/* Message Actions */}
-                      <div className={`message-actions absolute -top-6 right-0 flex gap-0.5 bg-gray-800/90 backdrop-blur-sm rounded-md p-0.5 shadow-lg transition-opacity duration-200 ${
-                        window.innerWidth < 640 
-                          ? (tappedMessage === e._id ? 'opacity-100' : 'opacity-0') 
-                          : 'opacity-0 group-hover:opacity-100'
-                      }`}>
+                      <div
+                        className={`message-actions absolute -top-6 right-0 flex gap-0.5 bg-gray-800/90 backdrop-blur-sm rounded-md p-0.5 shadow-lg transition-opacity duration-200 ${
+                          window.innerWidth < 640
+                            ? tappedMessage === e._id
+                              ? "opacity-100"
+                              : "opacity-0"
+                            : "opacity-0 group-hover:opacity-100"
+                        }`}
+                      >
                         {/* Delete button - only for messages sent by me */}
-                        {isSentByMe && onDeleteMessage && e.messageType !== "deleted" && (
-                          <button
-                            onClick={() => {
-                              onDeleteMessage(e._id);
-                              setTappedMessage(null);
-                            }}
-                            className="p-1 bg-gray-700/80 rounded hover:bg-red-500 active:bg-red-500 transition-colors"
-                            title="Delete message"
-                          >
-                            <Trash className="w-3 h-3" />
-                          </button>
-                        )}
+                        {isSentByMe &&
+                          onDeleteMessage &&
+                          e.messageType !== "deleted" && (
+                            <button
+                              onClick={() => {
+                                onDeleteMessage(e._id);
+                                setTappedMessage(null);
+                              }}
+                              className="p-1 bg-gray-700/80 rounded hover:bg-red-500 active:bg-red-500 transition-colors"
+                              title="Delete message"
+                            >
+                              <Trash className="w-3 h-3" />
+                            </button>
+                          )}
 
                         {/* Reply button - only for messages received from others */}
-                        {!isSentByMe && onReplyToMessage && e.messageType !== "deleted" && (
-                          <button
-                            onClick={() => {
-                              onReplyToMessage(e);
-                              setTappedMessage(null);
-                            }}
-                            className="p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
-                            title="Reply"
-                          >
-                            <Reply className="w-3 h-3" />
-                          </button>
-                        )}
+                        {!isSentByMe &&
+                          onReplyToMessage &&
+                          e.messageType !== "deleted" && (
+                            <button
+                              onClick={() => {
+                                onReplyToMessage(e);
+                                setTappedMessage(null);
+                              }}
+                              className="p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
+                              title="Reply"
+                            >
+                              <Reply className="w-3 h-3" />
+                            </button>
+                          )}
 
                         {/* Reaction button - only for messages received from others */}
-                        {!isSentByMe && onAddReaction && e.messageType !== "deleted" && (
-                          <button
-                            onClick={() => {
-                              setShowReactionPicker(
-                                showReactionPicker === e._id ? null : e._id
-                              );
-                              setTappedMessage(null);
-                            }}
-                            className="reaction-button p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
-                            title="Add reaction"
-                          >
-                            <Smile className="w-3 h-3" />
-                          </button>
-                        )}
+                        {!isSentByMe &&
+                          onAddReaction &&
+                          e.messageType !== "deleted" && (
+                            <button
+                              onClick={() => {
+                                setShowReactionPicker(
+                                  showReactionPicker === e._id ? null : e._id
+                                );
+                                setTappedMessage(null);
+                              }}
+                              className="reaction-button p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
+                              title="Add reaction"
+                            >
+                              <Smile className="w-3 h-3" />
+                            </button>
+                          )}
 
                         {/* Forward button - for both sent and received messages */}
                         {onForwardMessage && e.messageType !== "deleted" && (
@@ -393,7 +425,12 @@ const ChatMessages = React.memo(
                                 key={emoji}
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  console.log('Emoji clicked:', emoji, 'for message:', e._id);
+                                  console.log(
+                                    "Emoji clicked:",
+                                    emoji,
+                                    "for message:",
+                                    e._id
+                                  );
                                   handleAddReaction(e._id, emoji);
                                 }}
                                 className="p-1.5 hover:bg-gray-700/50 rounded-full transition-all duration-150 text-base transform hover:scale-110 active:scale-95 min-w-[28px] h-7 flex items-center justify-center"
@@ -422,9 +459,15 @@ const ChatMessages = React.memo(
                                 ? "bg-blue-500/20 border-blue-400/50 text-blue-300"
                                 : "bg-gray-700/80 border-gray-600 text-gray-300 hover:bg-gray-600"
                             }`}
-                            title={`${reaction.userId === loggedInUser?._id ? 'You' : 'Someone'} reacted with ${reaction.emoji}`}
+                            title={`${
+                              reaction.userId === loggedInUser?._id
+                                ? "You"
+                                : "Someone"
+                            } reacted with ${reaction.emoji}`}
                           >
-                            <span className="text-sm leading-none">{reaction.emoji}</span>
+                            <span className="text-sm leading-none">
+                              {reaction.emoji}
+                            </span>
                             <span className="text-[10px] font-medium">1</span>
                           </span>
                         ))}
@@ -433,7 +476,9 @@ const ChatMessages = React.memo(
 
                     <div
                       className={`flex items-center gap-1 text-[10px] sm:text-[11px] text-gray-400 mt-1 ${
-                        isSentByMe ? "pr-1 sm:pr-2 flex-row-reverse" : "pl-1 sm:pl-2"
+                        isSentByMe
+                          ? "pr-1 sm:pr-2 flex-row-reverse"
+                          : "pl-1 sm:pl-2"
                       }`}
                     >
                       <span>
@@ -473,14 +518,14 @@ const ChatMessages = React.memo(
           .chat-scroll::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.3);
           }
-          
+
           /* Mobile touch interactions */
           @media (max-width: 768px) {
             .group-message:active .group > div:first-child {
               opacity: 1 !important;
             }
           }
-          
+
           /* Better touch targets on mobile */
           @media (max-width: 640px) {
             .reaction-picker button {
