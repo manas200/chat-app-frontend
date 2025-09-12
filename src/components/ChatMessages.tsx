@@ -260,17 +260,9 @@ const ChatMessages = React.memo(
                           : "bg-white/10 text-gray-100 backdrop-blur-sm rounded-bl-none"
                       } ${e.messageType === "image" ? "p-1" : "px-3 py-2 sm:px-4"}`}
                       onTouchStart={(event) => {
-                        // Only show actions for received messages (not sent by me)
-                        if (!isSentByMe) {
-                          event.preventDefault();
-                          setTappedMessage(tappedMessage === e._id ? null : e._id);
-                        }
-                      }}
-                      onClick={() => {
-                        // For desktop, only show actions for received messages
-                        if (!isSentByMe && window.innerWidth >= 640) {
-                          // Desktop behavior (keep existing hover)
-                        }
+                        // Show actions for both sent and received messages
+                        event.preventDefault();
+                        setTappedMessage(tappedMessage === e._id ? null : e._id);
                       }}
                     >
                       {/* WhatsApp-style Reply Context - INSIDE the message bubble */}
@@ -327,55 +319,70 @@ const ChatMessages = React.memo(
                         </>
                       )}
 
-                      {/* Message Actions - Only for received messages (not sent by me) */}
-                      {!isSentByMe && (
-                        <div className={`message-actions absolute -top-6 right-0 flex gap-0.5 bg-gray-800/90 backdrop-blur-sm rounded-md p-0.5 shadow-lg transition-opacity duration-200 ${
-                          window.innerWidth < 640 
-                            ? (tappedMessage === e._id ? 'opacity-100' : 'opacity-0') 
-                            : 'opacity-0 group-hover:opacity-100'
-                        }`}>
-                          {onReplyToMessage && e.messageType !== "deleted" && (
-                            <button
-                              onClick={() => {
-                                onReplyToMessage(e);
-                                setTappedMessage(null);
-                              }}
-                              className="p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
-                              title="Reply"
-                            >
-                              <Reply className="w-3 h-3" />
-                            </button>
-                          )}
+                      {/* Message Actions */}
+                      <div className={`message-actions absolute -top-6 right-0 flex gap-0.5 bg-gray-800/90 backdrop-blur-sm rounded-md p-0.5 shadow-lg transition-opacity duration-200 ${
+                        window.innerWidth < 640 
+                          ? (tappedMessage === e._id ? 'opacity-100' : 'opacity-0') 
+                          : 'opacity-0 group-hover:opacity-100'
+                      }`}>
+                        {/* Delete button - only for messages sent by me */}
+                        {isSentByMe && onDeleteMessage && e.messageType !== "deleted" && (
+                          <button
+                            onClick={() => {
+                              onDeleteMessage(e._id);
+                              setTappedMessage(null);
+                            }}
+                            className="p-1 bg-gray-700/80 rounded hover:bg-red-500 active:bg-red-500 transition-colors"
+                            title="Delete message"
+                          >
+                            <Trash className="w-3 h-3" />
+                          </button>
+                        )}
 
-                          {onAddReaction && e.messageType !== "deleted" && (
-                            <button
-                              onClick={() => {
-                                setShowReactionPicker(
-                                  showReactionPicker === e._id ? null : e._id
-                                );
-                                setTappedMessage(null);
-                              }}
-                              className="reaction-button p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
-                              title="Add reaction"
-                            >
-                              <Smile className="w-3 h-3" />
-                            </button>
-                          )}
+                        {/* Reply button - only for messages received from others */}
+                        {!isSentByMe && onReplyToMessage && e.messageType !== "deleted" && (
+                          <button
+                            onClick={() => {
+                              onReplyToMessage(e);
+                              setTappedMessage(null);
+                            }}
+                            className="p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
+                            title="Reply"
+                          >
+                            <Reply className="w-3 h-3" />
+                          </button>
+                        )}
 
-                          {onForwardMessage && e.messageType !== "deleted" && (
-                            <button
-                              onClick={() => {
-                                onForwardMessage(e);
-                                setTappedMessage(null);
-                              }}
-                              className="p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
-                              title="Forward"
-                            >
-                              <Forward className="w-3 h-3" />
-                            </button>
-                          )}
-                        </div>
-                      )}
+                        {/* Reaction button - only for messages received from others */}
+                        {!isSentByMe && onAddReaction && e.messageType !== "deleted" && (
+                          <button
+                            onClick={() => {
+                              setShowReactionPicker(
+                                showReactionPicker === e._id ? null : e._id
+                              );
+                              setTappedMessage(null);
+                            }}
+                            className="reaction-button p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
+                            title="Add reaction"
+                          >
+                            <Smile className="w-3 h-3" />
+                          </button>
+                        )}
+
+                        {/* Forward button - for both sent and received messages */}
+                        {onForwardMessage && e.messageType !== "deleted" && (
+                          <button
+                            onClick={() => {
+                              onForwardMessage(e);
+                              setTappedMessage(null);
+                            }}
+                            className="p-1 bg-gray-700/80 rounded hover:bg-gray-600 active:bg-gray-600 transition-colors"
+                            title="Forward"
+                          >
+                            <Forward className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
 
                       {/* Reaction Picker */}
                       {showReactionPicker === e._id && (
