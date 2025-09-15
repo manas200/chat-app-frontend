@@ -1,5 +1,5 @@
 import { User } from "@/context/AppContext";
-import { Menu, UserCircle } from "lucide-react";
+import { Menu, UserCircle, PanelLeftClose } from "lucide-react";
 import React from "react";
 
 interface ChatHeaderProps {
@@ -18,13 +18,13 @@ const ChatHeader = ({
   const isOnlineUser = user && onlineUsers.includes(user._id);
   return (
     <>
-      {/* mobile menu toggle */}
+      {/* {side panel} */}
       <div className="sm:hidden fixed top-2.5 right-4 z-30">
         <button
-          className="p-3 m-1 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+          className="p-1.5 m-1.5 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
           onClick={() => setSidebarOpen(true)}
         >
-          <Menu className="w-4 h-4 text-gray-200" />
+          <PanelLeftClose className="w-5.5 h-5.5 text-gray-200" />
         </button>
       </div>
 
