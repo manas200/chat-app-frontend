@@ -54,12 +54,10 @@ const ChatMessages = React.memo(
     );
     const [tappedMessage, setTappedMessage] = useState<string | null>(null);
 
-    // Handle clicking outside reaction picker and tapped message
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as Element;
 
-        // Close reaction picker
         if (
           showReactionPicker &&
           !target.closest(".reaction-picker") &&
@@ -68,7 +66,6 @@ const ChatMessages = React.memo(
           setShowReactionPicker(null);
         }
 
-        // Close tapped message actions
         if (
           tappedMessage &&
           !target.closest(".message-bubble") &&
@@ -88,7 +85,6 @@ const ChatMessages = React.memo(
       setLocalMessages(messages || []);
     }, [messages]);
 
-    // Socket listener for deleted messages and reactions
     useEffect(() => {
       if (!socket) return;
 
@@ -158,12 +154,10 @@ const ChatMessages = React.memo(
         if (!scrollRef.current || !bottomRef.current) return;
 
         if (force) {
-          // Force scroll to bottom (for new messages/when switching chats)
           bottomRef.current.scrollIntoView({
             behavior: smooth ? "smooth" : "auto",
           });
         } else {
-          // Only scroll if user is near bottom
           const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
           const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
           if (isNearBottom) {
@@ -176,25 +170,21 @@ const ChatMessages = React.memo(
       []
     );
 
-    // Force scroll to bottom when switching chats or when chat loads initially
     useEffect(() => {
       if (selectedUser) {
-        // Force scroll to bottom when switching chats
         scrollToBottom(false, true);
       }
     }, [selectedUser, scrollToBottom]);
 
-    // Auto-scroll for new messages (only if near bottom)
     useEffect(() => {
       if (uniqueMessages.length > 0) {
         scrollToBottom(true, false);
       }
     }, [uniqueMessages, scrollToBottom]);
 
-    // Force scroll to bottom when a message is sent (especially when replying to older messages)
     useEffect(() => {
       if (forceScrollToBottom) {
-        scrollToBottom(true, true); // Force scroll with smooth animation
+        scrollToBottom(true, true);
       }
     }, [forceScrollToBottom, scrollToBottom]);
 
@@ -230,9 +220,13 @@ const ChatMessages = React.memo(
           }}
         >
           {!selectedUser ? (
-            <div className="flex flex-col items-center justify-center h-full text-center py-12 px-4">
-              <div className="mx-auto w-40 h-40 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-6 shadow-2xl shadow-blue-500/40">
-                <Zap width={120} height={120} />
+            <div className="flex flex-col items-center justify-center h-full text-center py-3 px-4">
+              <div className="mx-auto w-65 h-65 flex items-center justify-center mb-3">
+                <img
+                  src="/logo.png"
+                  alt="App Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div className="flex">
                 <h2 className="text-4xl font-semibold text-white mb-5">
@@ -249,12 +243,10 @@ const ChatMessages = React.memo(
             </div>
           ) : (
             <>
-              {/* Spacer to push messages to bottom */}
               <div className="flex-grow" />
               {uniqueMessages.map((e) => {
                 const isSentByMe = e.sender === loggedInUser?._id;
 
-                // Debug logging
                 if (e.reactions && e.reactions.length > 0) {
                   console.log("Message with reactions:", e._id, e.reactions);
                 }
@@ -278,14 +270,12 @@ const ChatMessages = React.memo(
                         e.messageType === "image" ? "p-1" : "px-3 py-2 sm:px-4"
                       }`}
                       onTouchStart={(event) => {
-                        // Show actions for both sent and received messages
                         event.preventDefault();
                         setTappedMessage(
                           tappedMessage === e._id ? null : e._id
                         );
                       }}
                     >
-                      {/* WhatsApp-style Reply Context - INSIDE the message bubble */}
                       {e.messageType === "reply" && e.repliedMessage && (
                         <div
                           className={`mb-2 sm:mb-3 p-1.5 sm:p-2 rounded-md border-l-4 ${
@@ -294,14 +284,12 @@ const ChatMessages = React.memo(
                               : "bg-gray-500/10 border-l-gray-400"
                           }`}
                         >
-                          {/* Sender name */}
                           <div className="text-xs font-medium mb-1 opacity-90">
                             {e.repliedMessage.sender === loggedInUser?._id
                               ? "You"
                               : "Other"}
                           </div>
 
-                          {/* Quoted message content */}
                           <div className="text-sm opacity-75">
                             {e.repliedMessage.messageType === "image" ? (
                               <div className="flex items-center gap-2">
@@ -321,7 +309,6 @@ const ChatMessages = React.memo(
                         </div>
                       )}
 
-                      {/* Main message content */}
                       {e.messageType === "deleted" ? (
                         <p className="italic text-gray-300">
                           This message was deleted
@@ -341,7 +328,6 @@ const ChatMessages = React.memo(
                         </>
                       )}
 
-                      {/* Message Actions */}
                       <div
                         className={`message-actions absolute -top-6 right-0 flex gap-0.5 bg-gray-800/90 backdrop-blur-sm rounded-md p-0.5 shadow-lg transition-opacity duration-200 ${
                           window.innerWidth < 640
@@ -351,7 +337,6 @@ const ChatMessages = React.memo(
                             : "opacity-0 group-hover:opacity-100"
                         }`}
                       >
-                        {/* Delete button - only for messages sent by me */}
                         {isSentByMe &&
                           onDeleteMessage &&
                           e.messageType !== "deleted" && (
@@ -367,7 +352,6 @@ const ChatMessages = React.memo(
                             </button>
                           )}
 
-                        {/* Reply button - only for messages received from others */}
                         {!isSentByMe &&
                           onReplyToMessage &&
                           e.messageType !== "deleted" && (
@@ -383,7 +367,6 @@ const ChatMessages = React.memo(
                             </button>
                           )}
 
-                        {/* Reaction button - only for messages received from others */}
                         {!isSentByMe &&
                           onAddReaction &&
                           e.messageType !== "deleted" && (
@@ -401,7 +384,6 @@ const ChatMessages = React.memo(
                             </button>
                           )}
 
-                        {/* Forward button - for both sent and received messages */}
                         {onForwardMessage && e.messageType !== "deleted" && (
                           <button
                             onClick={() => {
@@ -416,7 +398,6 @@ const ChatMessages = React.memo(
                         )}
                       </div>
 
-                      {/* Reaction Picker */}
                       {showReactionPicker === e._id && (
                         <div className="reaction-picker absolute bottom-full mb-1 right-0 sm:left-0 bg-gray-900/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-2xl z-50 border border-gray-700/50 animate-in slide-in-from-bottom-1 duration-200 transform translate-x-1/4 sm:translate-x-0">
                           <div className="flex gap-1">
@@ -444,7 +425,6 @@ const ChatMessages = React.memo(
                       )}
                     </div>
 
-                    {/* Reactions */}
                     {e.reactions && e.reactions.length > 0 && (
                       <div
                         className={`flex flex-wrap gap-1 mt-1.5 ${
@@ -519,14 +499,12 @@ const ChatMessages = React.memo(
             background: rgba(255, 255, 255, 0.3);
           }
 
-          /* Mobile touch interactions */
           @media (max-width: 768px) {
             .group-message:active .group > div:first-child {
               opacity: 1 !important;
             }
           }
 
-          /* Better touch targets on mobile */
           @media (max-width: 640px) {
             .reaction-picker button {
               min-width: 32px;

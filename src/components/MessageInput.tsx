@@ -205,7 +205,7 @@ const MessageInput = ({
                 isMobile
                   ? {
                       right: "0px",
-                      transform: "translateX(calc(-140% + 10px))", // Position so it fits within screen
+                      transform: "translateX(calc(-140% + 10px))",
                     }
                   : {}
               }
@@ -231,10 +231,9 @@ const MessageInput = ({
           )}
         </div>
 
-        {/* Input Field */}
         <input
           type="text"
-          className="flex-1 bg-gray-700 rounded-lg px-3 sm:px-4 py-2 text-sm sm:text-base text-white placeholder-gray-400 border border-transparent focus:border-blue-500 focus:outline-none transition-colors"
+          className="flex-1 bg-gray-700 rounded-lg px-3 sm:px-4 py-3 text-sm sm:text-base text-white placeholder-gray-400 border border-transparent focus:border-blue-500 focus:outline-none transition-colors"
           placeholder={imageFile ? "Add a caption..." : "Type a message..."}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -246,11 +245,10 @@ const MessageInput = ({
           }}
         />
 
-        {/* Send Button */}
         <button
           type="submit"
           disabled={(!imageFile && !message.trim()) || isUploading}
-          className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed text-white transform hover:scale-105 disabled:hover:scale-100 transition-transform touch:scale-100"
+          className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 px-3 sm:px-4 py-3 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed text-white transform hover:scale-105 disabled:hover:scale-100 transition-transform touch:scale-100"
           title="Send message"
         >
           {isUploading ? (
