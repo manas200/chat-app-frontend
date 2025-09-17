@@ -74,6 +74,9 @@ const ChatApp = () => {
     null
   );
   const [forceScrollToBottom, setForceScrollToBottom] = useState(false);
+  const [isLoadingChat, setIsLoadingChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredMessages, setFilteredMessages] = useState<Message[] | null>(null);
 
   const router = useRouter();
 
@@ -85,7 +88,50 @@ const ChatApp = () => {
 
   const handleLogout = () => logoutUser();
 
+  // Search functionality
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    
+    if (!query.trim()) {
+      setFilteredMessages(null);
+      return;
+    }
+
+    if (!messages) {
+      setFilteredMessages([]);
+      return;
+    }
+
+    const filtered = messages.filter((message) => {
+      // Don't search deleted messages
+      if (message.messageType === "deleted") return false;
+      
+      // Search in message text
+      if (message.text && message.text.toLowerCase().includes(query.toLowerCase())) {
+        return true;
+      }
+      
+      // Search in replied message text if it exists
+      if (message.repliedMessage?.text && 
+          message.repliedMessage.text.toLowerCase().includes(query.toLowerCase())) {
+        return true;
+      }
+      
+      return false;
+    });
+    
+    setFilteredMessages(filtered);
+  };
+
+  const handleSearchClose = () => {
+    setSearchQuery("");
+    setFilteredMessages(null);
+  };
+
   async function fetchChat() {
+    if (!selectedUser) return;
+    
+    setIsLoadingChat(true); // Show loading state immediately
     const token = Cookies.get("token");
     try {
       const { data } = await axios.get(
@@ -100,9 +146,20 @@ const ChatApp = () => {
       setMessages(data.messages);
       setUser(data.user);
       await fetchChats();
+      
+      setIsLoadingChat(false); // Hide loading state
+      
+      // Force scroll to bottom after messages are loaded
+      setTimeout(() => {
+        setForceScrollToBottom(true);
+        // Reset the force scroll flag after a brief delay
+        setTimeout(() => setForceScrollToBottom(false), 200);
+      }, 100);
+      
     } catch (error) {
       console.log(error);
       toast.error("Failed to load messages");
+      setIsLoadingChat(false); // Hide loading state on error too
     }
   }
 
@@ -549,6 +606,15 @@ const ChatApp = () => {
 
   useEffect(() => {
     if (selectedUser) {
+      // Immediately clear messages to prevent flash
+      setMessages(null);
+      setReplyingToMessage(null);
+      setIsLoadingChat(true);
+      
+      // Clear search when switching users
+      setSearchQuery("");
+      setFilteredMessages(null);
+      
       fetchChat();
       setIsTyping(false);
       resetUnseenCount(selectedUser);
@@ -559,6 +625,8 @@ const ChatApp = () => {
         socket?.emit("leaveChat", selectedUser);
         setMessages(null);
         setReplyingToMessage(null);
+        setSearchQuery("");
+        setFilteredMessages(null);
       };
     }
   }, [selectedUser, socket]);
@@ -574,7 +642,7 @@ const ChatApp = () => {
   if (loading) return <Loading />;
 
   return (
-    <div className="h-screen flex bg-gray-900 text-white relative overflow-hidden">
+    <div className="mobile-viewport h-screen flex bg-gray-900 text-white relative overflow-hidden">
       <ChatSidebar
         sidebarOpen={siderbarOpen}
         setSidebarOpen={setSiderbarOpen}
@@ -595,9 +663,12 @@ const ChatApp = () => {
           setSidebarOpen={setSiderbarOpen}
           isTyping={isTyping}
           onlineUsers={onlineUsers}
+          onSearch={handleSearch}
+          onSearchClose={handleSearchClose}
+          searchQuery={searchQuery}
         />
 
-        <div className="flex-1 px-2 sm:px-4">
+        <div className="flex-1 px-2 sm:px-4 overflow-hidden">
           <ChatMessages
             selectedUser={selectedUser}
             messages={messages}
@@ -607,10 +678,13 @@ const ChatApp = () => {
             onForwardMessage={handleForwardMessage}
             onAddReaction={handleAddReaction}
             forceScrollToBottom={forceScrollToBottom}
+            isLoadingChat={isLoadingChat}
+            searchQuery={searchQuery}
+            filteredMessages={filteredMessages}
           />
         </div>
 
-        <div className="px-2 sm:px-4 pb-2 sm:pb-3 pt-1">
+        <div className="px-2 sm:px-4 pb-safe-area-inset-bottom pt-1 bg-gray-900">
           <MessageInput
             selectedUser={selectedUser}
             message={message}

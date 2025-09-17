@@ -141,27 +141,27 @@ const MessageInput = ({
       )}
 
       {imageFile && (
-        <div className="relative w-fit">
+        <div className="relative w-fit mb-2">
           <img
             src={URL.createObjectURL(imageFile)}
             alt="preview"
-            className="w-24 h-24 object-cover rounded-lg border border-gray-600"
+            className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-gray-600"
           />
           <button
             type="button"
-            className="absolute -top-2 -right-2 bg-black rounded-full p-1 hover:bg-gray-800 transition-colors"
+            className="absolute -top-2 -right-2 bg-black rounded-full p-1 hover:bg-gray-800 transition-colors z-10"
             onClick={() => setImageFile(null)}
             title="Remove image"
           >
-            <X className="w-4 h-4 text-white" />
+            <X className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
           </button>
         </div>
       )}
 
-      <div className="flex items-center gap-1 sm:gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 min-h-[44px]">
         {/* Attachment */}
         <label
-          className="cursor-pointer bg-gray-700 hover:bg-gray-600 rounded-lg px-2 sm:px-3 py-2 transition-colors touch:bg-gray-600"
+          className="cursor-pointer bg-gray-700 hover:bg-gray-600 rounded-lg px-2 sm:px-3 py-2 transition-colors touch:bg-gray-600 flex-shrink-0"
           title="Attach image"
         >
           <Paperclip
@@ -181,7 +181,7 @@ const MessageInput = ({
           />
         </label>
 
-        <div className="relative" ref={pickerRef}>
+        <div className="relative flex-shrink-0" ref={pickerRef}>
           <button
             type="button"
             className="bg-gray-700 hover:bg-gray-600 rounded-lg px-2 sm:px-3 py-2 transition-colors touch:bg-gray-600"
@@ -233,7 +233,7 @@ const MessageInput = ({
 
         <input
           type="text"
-          className="flex-1 bg-gray-700 rounded-lg px-3 sm:px-4 py-3 text-sm sm:text-base text-white placeholder-gray-400 border border-transparent focus:border-blue-500 focus:outline-none transition-colors"
+          className="flex-1 min-w-0 bg-gray-700 rounded-lg px-3 sm:px-4 py-3 text-sm sm:text-base text-white placeholder-gray-400 border border-transparent focus:border-blue-500 focus:outline-none transition-colors"
           placeholder={imageFile ? "Add a caption..." : "Type a message..."}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -248,7 +248,7 @@ const MessageInput = ({
         <button
           type="submit"
           disabled={(!imageFile && !message.trim()) || isUploading}
-          className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 px-3 sm:px-4 py-3 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed text-white transform hover:scale-105 disabled:hover:scale-100 transition-transform touch:scale-100"
+          className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 px-3 sm:px-4 py-3 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed text-white transform hover:scale-105 disabled:hover:scale-100 transition-transform touch:scale-100 flex-shrink-0"
           title="Send message"
         >
           {isUploading ? (
