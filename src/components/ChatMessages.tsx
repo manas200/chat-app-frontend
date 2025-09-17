@@ -59,8 +59,8 @@ const ChatMessages = React.memo(
     const [showReactionPicker, setShowReactionPicker] = useState<string | null>(
       null
     );
-  const [tappedMessage, setTappedMessage] = useState<string | null>(null);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+    const [tappedMessage, setTappedMessage] = useState<string | null>(null);
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -89,30 +89,25 @@ const ChatMessages = React.memo(
       };
     }, [showReactionPicker, tappedMessage]);
 
-    // Handle messages loading and positioning
     useEffect(() => {
       if (messages && messages.length > 0 && selectedUser) {
         setLocalMessages(messages);
-        
-        // More aggressive scroll to bottom for initial load
+
         const scrollToEnd = () => {
           if (scrollRef.current) {
             const container = scrollRef.current;
             container.scrollTop = container.scrollHeight;
           }
         };
-        
-        // Multiple attempts with increasing delays to handle DOM updates
+
         const scrollAttempts = [0, 10, 50, 100, 200, 300];
         scrollAttempts.forEach((delay) => {
           setTimeout(scrollToEnd, delay);
         });
-        
-        // Use requestAnimationFrame for the next frame
+
         requestAnimationFrame(() => {
           requestAnimationFrame(scrollToEnd);
         });
-        
       } else {
         setLocalMessages([]);
       }
@@ -176,14 +171,20 @@ const ChatMessages = React.memo(
     // Helper function to highlight search terms
     const highlightSearchTerm = (text: string, searchTerm: string) => {
       if (!searchTerm || !text) return text;
-      
-      const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+
+      const regex = new RegExp(
+        `(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+        "gi"
+      );
       const parts = text.split(regex);
-      
+
       return parts.map((part, index) => {
         if (regex.test(part)) {
           return (
-            <span key={index} className="bg-yellow-500/30 text-yellow-200 px-1 rounded">
+            <span
+              key={index}
+              className="bg-yellow-500/30 text-yellow-200 px-1 rounded"
+            >
               {part}
             </span>
           );
@@ -193,9 +194,9 @@ const ChatMessages = React.memo(
     };
 
     const uniqueMessages = useMemo(() => {
-      // Use filtered messages if search is active, otherwise use all local messages
-      const messagesToProcess = searchQuery && filteredMessages ? filteredMessages : localMessages;
-      
+      const messagesToProcess =
+        searchQuery && filteredMessages ? filteredMessages : localMessages;
+
       const seen = new Set();
       return messagesToProcess.filter((msg) => {
         if (seen.has(msg._id)) return false;
@@ -209,18 +210,18 @@ const ChatMessages = React.memo(
         if (!scrollRef.current) return;
 
         const container = scrollRef.current;
-        
+
         if (force) {
           // INSTANT scroll to bottom for chat switching - no animation
           container.scrollTop = container.scrollHeight;
-          
+
           // Additional attempts to ensure it works
           setTimeout(() => {
             if (container) {
               container.scrollTop = container.scrollHeight;
             }
           }, 50);
-          
+
           setTimeout(() => {
             if (container) {
               container.scrollTop = container.scrollHeight;
@@ -229,12 +230,12 @@ const ChatMessages = React.memo(
         } else {
           const { scrollTop, scrollHeight, clientHeight } = container;
           const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
-          
+
           if (isNearBottom) {
             if (bottomRef.current) {
               bottomRef.current.scrollIntoView({
                 behavior: smooth ? "smooth" : "auto",
-                block: "end"
+                block: "end",
               });
             } else {
               // Fallback if bottomRef is not available
@@ -260,20 +261,17 @@ const ChatMessages = React.memo(
 
     useEffect(() => {
       if (forceScrollToBottom) {
-        scrollToBottom(false, true); // Use instant scroll, not smooth
+        scrollToBottom(false, true);
       }
     }, [forceScrollToBottom, scrollToBottom]);
 
-    // Handle when loading finishes and we have messages
     useEffect(() => {
       if (!isLoadingChat && messages && messages.length > 0 && selectedUser) {
-        // Give a small delay for DOM to render the messages
         setTimeout(() => {
           if (scrollRef.current) {
             const container = scrollRef.current;
             container.scrollTop = container.scrollHeight;
-            
-            // Additional safety scroll after a slightly longer delay
+
             setTimeout(() => {
               if (container) {
                 container.scrollTop = container.scrollHeight;
@@ -284,7 +282,6 @@ const ChatMessages = React.memo(
       }
     }, [isLoadingChat, messages, selectedUser]);
 
-    // Use layoutEffect for immediate synchronous scroll when messages render
     useLayoutEffect(() => {
       if (uniqueMessages.length > 0 && selectedUser && !isLoadingChat) {
         if (scrollRef.current) {
@@ -346,7 +343,6 @@ const ChatMessages = React.memo(
               </p>
             </div>
           ) : isLoadingChat || (selectedUser && uniqueMessages.length === 0) ? (
-            // Loading state - show spinner while chat is loading
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
               <p className="text-gray-400 text-sm">Loading messages...</p>
@@ -436,7 +432,9 @@ const ChatMessages = React.memo(
                           )}
                           {e.text && (
                             <p className="break-words">
-                              {searchQuery ? highlightSearchTerm(e.text, searchQuery) : e.text}
+                              {searchQuery
+                                ? highlightSearchTerm(e.text, searchQuery)
+                                : e.text}
                             </p>
                           )}
                         </>
@@ -444,7 +442,7 @@ const ChatMessages = React.memo(
 
                       <div
                         className={`message-actions absolute -top-6 flex gap-0.5 bg-gray-800/90 backdrop-blur-sm rounded-md p-0.5 shadow-lg transition-opacity duration-200 ${
-                          isSentByMe ? 'right-2' : 'left-2' // Move away from screen edges
+                          isSentByMe ? "right-2" : "left-2"
                         } ${
                           window.innerWidth < 640
                             ? tappedMessage === e._id
@@ -515,11 +513,13 @@ const ChatMessages = React.memo(
                       </div>
 
                       {showReactionPicker === e._id && (
-                        <div className={`reaction-picker absolute bottom-full mb-1 bg-gray-900/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-2xl z-50 border border-gray-700/50 animate-in slide-in-from-bottom-1 duration-200 ${
-                          isSentByMe 
-                            ? 'right-0 transform translate-x-4' // For sent messages, position from right with some offset
-                            : 'left-0 transform -translate-x-4' // For received messages, position from left with some offset
-                        }`}>
+                        <div
+                          className={`reaction-picker absolute bottom-full mb-1 bg-gray-900/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-2xl z-50 border border-gray-700/50 animate-in slide-in-from-bottom-1 duration-200 ${
+                            isSentByMe
+                              ? "right-0 transform translate-x-4"
+                              : "left-0 transform -translate-x-4"
+                          }`}
+                        >
                           <div className="flex gap-1">
                             {commonEmojis.map((emoji) => (
                               <button

@@ -41,20 +41,23 @@ const ChatHeader = ({
     setLocalSearchQuery(value);
     onSearch?.(value);
   };
+
   return (
     <>
-      {/* {side panel} */}
-      <div className="sm:hidden fixed top-2.5 right-4 z-30">
-        <button
-          className="p-1.5 m-1.5 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
-          onClick={() => setSidebarOpen(true)}
-        >
-          <PanelLeftClose className="w-5.5 h-5.5 text-gray-200" />
-        </button>
-      </div>
+      {/* Mobile sidebar toggle - Only show when NOT in search mode */}
+      {!isSearchMode && (
+        <div className="sm:hidden fixed top-2.5 right-4 z-30">
+          <button
+            className="p-1.5 m-1.5  text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <PanelLeftClose className="w-5.5 h-5.5" />
+          </button>
+        </div>
+      )}
 
-      {/* chat header */}
-      <div className="mb-2 sm:mb-4 bg-gray-800 border border-gray-700 p-2 px-3">
+      {/* Chat header */}
+      <div className="mb-2 sm:mb-4 bg-gray-800 border border-gray-700 p-2 px-3 relative">
         {isSearchMode ? (
           /* Search Mode */
           <div className="flex items-center gap-2 sm:gap-3">
@@ -150,14 +153,16 @@ const ChatHeader = ({
                   </div>
                 </div>
 
-                {/* Search Button */}
-                <button
-                  onClick={handleSearchToggle}
-                  className="p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
-                  title="Search messages"
-                >
-                  <Search className="w-5 h-5" />
-                </button>
+                {/* Search Button - Now visible on mobile */}
+                <div className="pr-12">
+                  <button
+                    onClick={handleSearchToggle}
+                    className="p-1.5 m-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
+                    title="Search messages"
+                  >
+                    <Search className="w-5.5 h-5.5" />
+                  </button>
+                </div>
               </>
             ) : (
               <div className="flex items-center gap-3 sm:gap-4 flex-1">
