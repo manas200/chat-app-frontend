@@ -220,8 +220,8 @@ const ChatMessages = React.memo(
           }}
         >
           {!selectedUser ? (
-            <div className="flex flex-col items-center justify-center h-full text-center py-3 px-4">
-              <div className="mx-auto w-65 h-65 flex items-center justify-center mb-3">
+            <div className="flex flex-col items-center justify-center h-full text-center py-2 px-4">
+              <div className="mx-auto w-55 h-55 flex items-center justify-center mb-3">
                 <img
                   src="/logo.png"
                   alt="App Logo"
@@ -229,14 +229,14 @@ const ChatMessages = React.memo(
                 />
               </div>
               <div className="flex">
-                <h2 className="text-4xl font-semibold text-white mb-5">
+                <h2 className="text-3xl font-semibold text-white mb-3">
                   Welcome,
                 </h2>
-                <h2 className="text-4xl ml-2 font-semibold text-blue-400 mb-5">
+                <h2 className="text-3xl ml-2 font-semibold text-blue-400 mb-3">
                   {loggedInUser?.name || "User"}!
                 </h2>
               </div>
-              <p className="text-xl text-gray-300 max-w-md">
+              <p className="text-lg text-gray-300 max-w-md">
                 Select a conversation from the sidebar or start a new chat to
                 begin messaging.
               </p>
