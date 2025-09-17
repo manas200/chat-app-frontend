@@ -76,7 +76,9 @@ const ChatApp = () => {
   const [forceScrollToBottom, setForceScrollToBottom] = useState(false);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredMessages, setFilteredMessages] = useState<Message[] | null>(null);
+  const [filteredMessages, setFilteredMessages] = useState<
+    Message[] | undefined
+  >(undefined);
 
   const router = useRouter();
 
@@ -91,9 +93,9 @@ const ChatApp = () => {
   // Search functionality
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    
+
     if (!query.trim()) {
-      setFilteredMessages(null);
+      setFilteredMessages(undefined);
       return;
     }
 
@@ -105,32 +107,37 @@ const ChatApp = () => {
     const filtered = messages.filter((message) => {
       // Don't search deleted messages
       if (message.messageType === "deleted") return false;
-      
+
       // Search in message text
-      if (message.text && message.text.toLowerCase().includes(query.toLowerCase())) {
+      if (
+        message.text &&
+        message.text.toLowerCase().includes(query.toLowerCase())
+      ) {
         return true;
       }
-      
+
       // Search in replied message text if it exists
-      if (message.repliedMessage?.text && 
-          message.repliedMessage.text.toLowerCase().includes(query.toLowerCase())) {
+      if (
+        message.repliedMessage?.text &&
+        message.repliedMessage.text.toLowerCase().includes(query.toLowerCase())
+      ) {
         return true;
       }
-      
+
       return false;
     });
-    
+
     setFilteredMessages(filtered);
   };
 
   const handleSearchClose = () => {
     setSearchQuery("");
-    setFilteredMessages(null);
+    setFilteredMessages(undefined);
   };
 
   async function fetchChat() {
     if (!selectedUser) return;
-    
+
     setIsLoadingChat(true); // Show loading state immediately
     const token = Cookies.get("token");
     try {
@@ -146,16 +153,15 @@ const ChatApp = () => {
       setMessages(data.messages);
       setUser(data.user);
       await fetchChats();
-      
+
       setIsLoadingChat(false); // Hide loading state
-      
+
       // Force scroll to bottom after messages are loaded
       setTimeout(() => {
         setForceScrollToBottom(true);
         // Reset the force scroll flag after a brief delay
         setTimeout(() => setForceScrollToBottom(false), 200);
       }, 100);
-      
     } catch (error) {
       console.log(error);
       toast.error("Failed to load messages");
@@ -339,7 +345,7 @@ const ChatApp = () => {
 
       setMessage("");
       setReplyingToMessage(null);
-      
+
       // Force scroll to bottom after sending message
       setForceScrollToBottom(true);
       // Reset the force scroll flag after a brief delay
@@ -411,7 +417,7 @@ const ChatApp = () => {
           return msg;
         });
       });
-      
+
       // Update chat sidebar to show "Message deleted"
       moveChatToTop(
         selectedUser,
@@ -422,7 +428,7 @@ const ChatApp = () => {
         },
         false
       );
-      
+
       console.log("📤 Message deleted successfully:", messageId);
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to delete message");
@@ -451,7 +457,11 @@ const ChatApp = () => {
       return;
     }
 
-    console.log("Adding reaction:", { messageId, emoji, userId: loggedInUser._id });
+    console.log("Adding reaction:", {
+      messageId,
+      emoji,
+      userId: loggedInUser._id,
+    });
     console.log("Socket connected:", socket.connected);
     console.log("Socket ID:", socket.id);
 
@@ -462,7 +472,7 @@ const ChatApp = () => {
         emoji,
         userId: loggedInUser._id,
       });
-      
+
       console.log("Reaction emitted via socket");
     } catch (error: any) {
       console.error("Error emitting reaction:", error);
@@ -541,24 +551,25 @@ const ChatApp = () => {
     socket?.on("messageDeleted", (deletedMessage) => {
       console.log("📤 Received messageDeleted event:", deletedMessage);
       if (selectedUser === deletedMessage.chatId) {
-        setMessages(
-          (prev) => {
-            if (!prev) return null;
-            const updatedMessages = prev.map((msg) =>
-              msg._id === deletedMessage._id 
-                ? {
-                    ...deletedMessage,
-                    messageType: "deleted",
-                    text: "",
-                    image: undefined,
-                    reactions: [], // Ensure reactions are cleared
-                  }
-                : msg
-            );
-            console.log("✅ Message updated to deleted state:", deletedMessage._id);
-            return updatedMessages;
-          }
-        );
+        setMessages((prev) => {
+          if (!prev) return null;
+          const updatedMessages = prev.map((msg) =>
+            msg._id === deletedMessage._id
+              ? {
+                  ...deletedMessage,
+                  messageType: "deleted",
+                  text: "",
+                  image: undefined,
+                  reactions: [], // Ensure reactions are cleared
+                }
+              : msg
+          );
+          console.log(
+            "✅ Message updated to deleted state:",
+            deletedMessage._id
+          );
+          return updatedMessages;
+        });
       }
     });
 
@@ -575,7 +586,10 @@ const ChatApp = () => {
                 ? { ...msg, reactions: data.reactions }
                 : msg
             );
-            console.log("Updated messages with reactions:", updatedMessages.find(m => m._id === data.messageId)?.reactions);
+            console.log(
+              "Updated messages with reactions:",
+              updatedMessages.find((m) => m._id === data.messageId)?.reactions
+            );
             return updatedMessages;
           });
         }
@@ -610,11 +624,11 @@ const ChatApp = () => {
       setMessages(null);
       setReplyingToMessage(null);
       setIsLoadingChat(true);
-      
+
       // Clear search when switching users
       setSearchQuery("");
-      setFilteredMessages(null);
-      
+      setFilteredMessages(undefined);
+
       fetchChat();
       setIsTyping(false);
       resetUnseenCount(selectedUser);
@@ -626,7 +640,7 @@ const ChatApp = () => {
         setMessages(null);
         setReplyingToMessage(null);
         setSearchQuery("");
-        setFilteredMessages(null);
+        setFilteredMessages(undefined);
       };
     }
   }, [selectedUser, socket]);
