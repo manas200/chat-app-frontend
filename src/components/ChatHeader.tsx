@@ -154,7 +154,7 @@ const ChatHeader = ({
                 </div>
 
                 {/* Search Button - Now visible on mobile */}
-                <div className="pr-12">
+                <div className="pr-12 sm:p-0">
                   <button
                     onClick={handleSearchToggle}
                     className="p-1.5 m-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
