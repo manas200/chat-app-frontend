@@ -85,7 +85,6 @@ graph TB
 **Key Features:**
 - OTP-based passwordless authentication
 - Redis-based OTP storage and rate limiting
-- Profile picture management
 - Demo account support
 
 **APIs:**
@@ -94,7 +93,6 @@ POST /api/v1/login           // Send OTP to email
 POST /api/v1/verify          // Verify OTP and get JWT
 GET  /api/v1/me             // Get current user profile
 PUT  /api/v1/profile        // Update profile
-PUT  /api/v1/profile-pic    // Update profile picture
 GET  /api/v1/users          // Get all users
 GET  /api/v1/user/:id       // Get specific user
 ```
@@ -105,7 +103,6 @@ User: {
   _id: ObjectId,
   name: String,
   email: String (unique, required),
-  profilePic: String (default: auto-generated avatar),
   createdAt: Date,
   updatedAt: Date
 }
@@ -202,7 +199,6 @@ Message Format: {
   _id: ObjectId("..."),
   name: "John Doe",
   email: "john@example.com",
-  profilePic: "https://api.dicebear.com/7.x/identicon/svg?seed=randomseed",
   createdAt: ISODate("2024-01-01T00:00:00Z"),
   updatedAt: ISODate("2024-01-01T00:00:00Z")
 }
@@ -2484,3 +2480,4 @@ const saveEncryptedMessage = async (messageData) => {
 ---
 
 This comprehensive guide covers all aspects of your chat application and should prepare you thoroughly for technical interviews. The key is to understand not just how things work, but why you made specific design decisions and what trade-offs were involved.
+
