@@ -12,7 +12,6 @@ import ChatMessages from "@/components/ChatMessages";
 import MessageInput from "@/components/MessageInput";
 import { SocketData } from "@/context/SocketContext";
 
-// In your chat page, update the Message interface
 export interface Message {
   _id: string;
   chatId: string;
@@ -33,12 +32,11 @@ export interface Message {
   }[];
   replyTo?: string;
   forwardedFrom?: string;
-  // Fix the type for repliedMessage
   repliedMessage?: {
     _id: string;
     text?: string;
     sender: string;
-    messageType: "text" | "image" | "deleted"; // Only these three types
+    messageType: "text" | "image" | "deleted";
     image?: {
       url: string;
       publicId: string;

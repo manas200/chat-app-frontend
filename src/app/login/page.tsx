@@ -33,8 +33,20 @@ const LoginPage = () => {
 
       toast.success(data.message);
       router.push(`/verify?email=${email}`);
-    } catch (error: any) {
-      toast.error(error.response.data.message);
+    } catch (err: unknown) {
+      let message = "Failed to send verification code";
+      if (axios.isAxiosError(err)) {
+        const resData = err.response?.data as unknown;
+        if (resData && typeof resData === "object" && "message" in resData) {
+          const msg = (resData as { message?: unknown }).message;
+          message = typeof msg === "string" ? msg : err.message ?? message;
+        } else {
+          message = err.message ?? message;
+        }
+      } else if (err instanceof Error) {
+        message = err.message ?? message;
+      }
+      toast.error(message);
     } finally {
       setLoading(false);
     }

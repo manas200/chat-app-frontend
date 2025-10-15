@@ -44,7 +44,6 @@ const ChatHeader = ({
 
   return (
     <>
-      {/* Mobile sidebar toggle - Only show when NOT in search mode */}
       {!isSearchMode && (
         <div className="sm:hidden fixed top-2.5 right-4 z-30">
           <button
@@ -153,7 +152,6 @@ const ChatHeader = ({
                   </div>
                 </div>
 
-                {/* Search Button - Now visible on mobile */}
                 <div className="pr-12 sm:p-0">
                   <button
                     onClick={handleSearchToggle}
