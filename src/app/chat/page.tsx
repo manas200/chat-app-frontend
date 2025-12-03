@@ -681,7 +681,7 @@ const ChatApp = () => {
           searchQuery={searchQuery}
         />
 
-        <div className="flex-1 px-2 sm:px-4 overflow-hidden">
+        <div className="flex-1 px-2 sm:px-4 overflow-hidden flex flex-col">
           <ChatMessages
             selectedUser={selectedUser}
             messages={messages}
