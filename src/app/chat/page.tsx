@@ -654,7 +654,8 @@ const ChatApp = () => {
   if (loading) return <Loading />;
 
   return (
-    <div className="mobile-viewport h-screen flex bg-gray-900 text-white relative overflow-hidden">
+    /* --- UPDATED CLASS HERE: Changed h-screen to h-[100dvh] --- */
+    <div className="flex h-[100dvh] w-full bg-gray-900 text-white relative overflow-hidden">
       <ChatSidebar
         sidebarOpen={siderbarOpen}
         setSidebarOpen={setSiderbarOpen}

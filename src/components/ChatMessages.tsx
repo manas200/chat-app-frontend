@@ -13,7 +13,6 @@ import moment from "moment";
 import {
   Check,
   CheckCheck,
-  Zap,
   Trash,
   Reply,
   Forward,
@@ -60,7 +59,6 @@ const ChatMessages = React.memo(
       null
     );
     const [tappedMessage, setTappedMessage] = useState<string | null>(null);
-    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -312,7 +310,8 @@ const ChatMessages = React.memo(
       <div className="flex-1 overflow-hidden ">
         <div
           ref={scrollRef}
-          className={`h-full max-h-[calc(100vh-180px)] sm:max-h-[calc(100vh-200px)] overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 chat-scroll flex flex-col ${
+          /* --- UPDATED CLASS HERE: Removed max-h calculations, added h-full w-full --- */
+          className={`h-full w-full overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 chat-scroll flex flex-col ${
             showScrollbar ? "show" : ""
           }`}
           style={{
