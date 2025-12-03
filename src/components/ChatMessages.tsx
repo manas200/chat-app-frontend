@@ -310,7 +310,6 @@ const ChatMessages = React.memo(
       <div className="flex-1 overflow-hidden ">
         <div
           ref={scrollRef}
-          /* --- UPDATED CLASS HERE: Removed max-h calculations, added h-full w-full --- */
           className={`h-full w-full overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 chat-scroll flex flex-col ${
             showScrollbar ? "show" : ""
           }`}
@@ -341,23 +340,25 @@ const ChatMessages = React.memo(
                 begin messaging.
               </p>
             </div>
-          ) : isLoadingChat || (selectedUser && uniqueMessages.length === 0) ? (
+          ) : isLoadingChat ? (
+            /* --- FIX: Only show loader when isLoadingChat is true, NOT when messages are empty --- */
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
               <p className="text-gray-400 text-sm">Loading messages...</p>
             </div>
           ) : (
             <>
+              {/* --- ADDED: Empty State for new chats --- */}
+              {uniqueMessages.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400/50">
+                  <p className="text-lg font-medium">No messages yet</p>
+                  <p className="text-sm">Say hello to start the chat!</p>
+                </div>
+              )}
+
               <div className="flex-grow" />
               {uniqueMessages.map((e) => {
                 const isSentByMe = e.sender === loggedInUser?._id;
-
-                if (e.reactions && e.reactions.length > 0) {
-                  console.log("Message with reactions:", e._id, e.reactions);
-                }
-                if (e.messageType === "reply") {
-                  console.log("Reply message:", e._id, e.repliedMessage);
-                }
 
                 return (
                   <div
@@ -525,12 +526,6 @@ const ChatMessages = React.memo(
                                 key={emoji}
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  console.log(
-                                    "Emoji clicked:",
-                                    emoji,
-                                    "for message:",
-                                    e._id
-                                  );
                                   handleAddReaction(e._id, emoji);
                                 }}
                                 className="p-1.5 hover:bg-gray-700/50 rounded-full transition-all duration-150 text-base transform hover:scale-110 active:scale-95 min-w-[28px] h-7 flex items-center justify-center"
