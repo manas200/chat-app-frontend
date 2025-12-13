@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useCallback,
 } from "react";
 import Cookies from "js-cookie";
 import axios from "axios";
@@ -96,7 +97,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   }
 
   const [chats, setChats] = useState<Chats[] | null>(null);
-  async function fetchChats() {
+  const fetchChats = useCallback(async () => {
     const token = Cookies.get("token");
     try {
       const { data } = await axios.get(`${chat_service}/api/v1/chat/all`, {
@@ -109,11 +110,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     } catch (error) {
       console.log(error);
     }
-  }
+  }, []);
 
   const [users, setUsers] = useState<User[] | null>(null);
 
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
     const token = Cookies.get("token");
 
     try {
@@ -127,13 +128,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     } catch (error) {
       console.log(error);
     }
-  }
+  }, []);
 
   useEffect(() => {
     fetchUser();
     fetchChats();
     fetchUsers();
-  }, []);
+  }, [fetchChats, fetchUsers]);
 
   return (
     <AppContext.Provider
