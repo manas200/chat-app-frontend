@@ -7,23 +7,27 @@ import {
   Reply,
   XCircle,
   ImageIcon,
+  Pencil,
+  Check,
 } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { Message } from "@/app/chat/page";
-import { useEffect as useReactEffect, useState as useReactState } from "react";
 
 interface MessageInputProps {
   selectedUser: string | null;
   message: string;
   setMessage: (value: string) => void;
   handleMessageSend: (
-    e: any,
+    e: React.FormEvent,
     imageFile?: File | null,
     replyTo?: string
   ) => void;
+  handleEditSubmit?: (e: React.FormEvent, editedText: string) => void;
   replyingToMessage?: Message | null;
   setReplyingToMessage?: (message: Message | null) => void;
+  editingMessage?: Message | null;
+  setEditingMessage?: (message: Message | null) => void;
 }
 
 const MessageInput = ({
@@ -31,8 +35,11 @@ const MessageInput = ({
   message,
   setMessage,
   handleMessageSend,
+  handleEditSubmit,
   replyingToMessage,
   setReplyingToMessage,
+  editingMessage,
+  setEditingMessage,
 }: MessageInputProps) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -40,10 +47,31 @@ const MessageInput = ({
   const [isMobile, setIsMobile] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() && !imageFile) return;
 
+    // Handle edit mode
+    if (editingMessage && handleEditSubmit) {
+      console.log("Editing message:", {
+        messageId: editingMessage._id,
+        newText: message,
+      });
+
+      setIsUploading(true);
+      try {
+        await handleEditSubmit(e, message);
+        setMessage("");
+      } catch (error) {
+        console.error("Error editing message:", error);
+      } finally {
+        setIsUploading(false);
+        setShowEmojiPicker(false);
+      }
+      return;
+    }
+
+    // Handle normal send
     console.log("Sending message with reply:", {
       message,
       imageFile: !!imageFile,
@@ -62,6 +90,12 @@ const MessageInput = ({
       setIsUploading(false);
       setShowEmojiPicker(false);
     }
+  };
+
+  // Cancel edit mode
+  const handleCancelEdit = () => {
+    setEditingMessage?.(null);
+    setMessage("");
   };
 
   const onEmojiClick = (emojiData: EmojiClickData) => {
@@ -104,6 +138,33 @@ const MessageInput = ({
       onSubmit={handleSubmit}
       className="flex flex-col gap-1 sm:gap-2 border-t border-gray-700 pt-1 sm:pt-2 relative"
     >
+      {/* Edit Message Preview */}
+      {editingMessage && !replyingToMessage && (
+        <div className="bg-gray-800 p-2 sm:p-3 rounded-lg mb-1 sm:mb-2 relative border-l-4 border-amber-500">
+          <div className="flex items-start gap-2">
+            <Pencil className="w-4 h-4 text-amber-400 mt-1 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-amber-400 font-medium mb-1">
+                Editing message
+              </p>
+              <div className="text-sm text-gray-300 border-l-2 border-amber-400 pl-2">
+                <span className="truncate block">
+                  {editingMessage.text || "Message"}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="text-gray-400 hover:text-white flex-shrink-0 transition-colors"
+              title="Cancel edit"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Enhanced Reply Preview */}
       {replyingToMessage && (
         <div className="bg-gray-800 p-2 sm:p-3 rounded-lg mb-1 sm:mb-2 relative border-l-4 border-blue-500">
@@ -142,6 +203,7 @@ const MessageInput = ({
 
       {imageFile && (
         <div className="relative w-fit mb-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={URL.createObjectURL(imageFile)}
             alt="preview"
@@ -233,8 +295,16 @@ const MessageInput = ({
 
         <input
           type="text"
-          className="flex-1 min-w-0 bg-gray-700 rounded-lg px-3 sm:px-4 py-3 text-sm sm:text-base text-white placeholder-gray-400 border border-transparent focus:border-blue-500 focus:outline-none transition-colors"
-          placeholder={imageFile ? "Add a caption..." : "Type a message..."}
+          className={`flex-1 min-w-0 bg-gray-700 rounded-lg px-3 sm:px-4 py-3 text-sm sm:text-base text-white placeholder-gray-400 border border-transparent focus:outline-none transition-colors ${
+            editingMessage ? "focus:border-amber-500" : "focus:border-blue-500"
+          }`}
+          placeholder={
+            editingMessage
+              ? "Edit your message..."
+              : imageFile
+              ? "Add a caption..."
+              : "Type a message..."
+          }
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={(e) => {
@@ -243,16 +313,23 @@ const MessageInput = ({
               handleSubmit(e);
             }
           }}
+          autoFocus={!!editingMessage}
         />
 
         <button
           type="submit"
           disabled={(!imageFile && !message.trim()) || isUploading}
-          className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 px-3 sm:px-4 py-3 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed text-white transform hover:scale-105 disabled:hover:scale-100 transition-transform touch:scale-100 flex-shrink-0"
-          title="Send message"
+          className={`px-3 sm:px-4 py-3 rounded-lg transition-all flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed text-white transform hover:scale-105 disabled:hover:scale-100 flex-shrink-0 ${
+            editingMessage
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+              : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+          }`}
+          title={editingMessage ? "Save edit" : "Send message"}
         >
           {isUploading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
+          ) : editingMessage ? (
+            <Check className="w-4 h-4" />
           ) : (
             <Send className="w-4 h-4" />
           )}

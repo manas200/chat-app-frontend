@@ -1,6 +1,7 @@
 import { Message } from "@/app/chat/page";
 import { User } from "@/context/AppContext";
 import { SocketData } from "@/context/SocketContext";
+import LinkPreview from "@/components/LinkPreview";
 import React, {
   useEffect,
   useLayoutEffect,
@@ -18,6 +19,7 @@ import {
   Forward,
   Smile,
   ImageIcon,
+  Pencil,
 } from "lucide-react";
 
 interface ChatMessagesProps {
@@ -28,6 +30,7 @@ interface ChatMessagesProps {
   onReplyToMessage?: (message: Message) => void;
   onForwardMessage?: (message: Message) => void;
   onAddReaction?: (messageId: string, emoji: string) => void;
+  onEditMessage?: (message: Message) => void;
   forceScrollToBottom?: boolean;
   isLoadingChat?: boolean;
   searchQuery?: string;
@@ -43,6 +46,7 @@ const ChatMessages = React.memo(
     onReplyToMessage,
     onForwardMessage,
     onAddReaction,
+    onEditMessage,
     forceScrollToBottom,
     isLoadingChat,
     searchQuery = "",
@@ -306,6 +310,18 @@ const ChatMessages = React.memo(
 
     const commonEmojis = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
+    // Helper function to check if a message can be edited (within 15 minutes)
+    const canEditMessage = (message: Message): boolean => {
+      if (message.messageType === "deleted") return false;
+      if (message.messageType === "image" && !message.text) return false; // Image-only messages can't be edited
+
+      const messageCreatedAt = new Date(message.createdAt).getTime();
+      const currentTime = Date.now();
+      const fifteenMinutesInMs = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+      return currentTime - messageCreatedAt <= fifteenMinutesInMs;
+    };
+
     return (
       <div className="flex-1 overflow-hidden ">
         <div
@@ -321,6 +337,7 @@ const ChatMessages = React.memo(
           {!selectedUser ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-2 px-4">
               <div className="mx-auto w-55 h-55 flex items-center justify-center mb-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/logo.png"
                   alt="App Logo"
@@ -423,6 +440,7 @@ const ChatMessages = React.memo(
                         <>
                           {e.messageType === "image" && e.image && (
                             <div className="relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={e.image.url}
                                 alt="shared"
@@ -436,6 +454,13 @@ const ChatMessages = React.memo(
                                 ? highlightSearchTerm(e.text, searchQuery)
                                 : e.text}
                             </p>
+                          )}
+                          {/* Link Preview Card */}
+                          {e.linkPreview && e.linkPreview.url && (
+                            <LinkPreview
+                              preview={e.linkPreview}
+                              isSentByMe={isSentByMe}
+                            />
                           )}
                         </>
                       )}
@@ -465,6 +490,20 @@ const ChatMessages = React.memo(
                               <Trash className="w-3 h-3" />
                             </button>
                           )}
+
+                        {/* Edit button - only for sender's messages within 15 minutes */}
+                        {isSentByMe && onEditMessage && canEditMessage(e) && (
+                          <button
+                            onClick={() => {
+                              onEditMessage(e);
+                              setTappedMessage(null);
+                            }}
+                            className="p-1 bg-gray-700/80 rounded hover:bg-blue-500 active:bg-blue-500 transition-colors"
+                            title="Edit message"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        )}
 
                         {!isSentByMe &&
                           onReplyToMessage &&
@@ -578,6 +617,21 @@ const ChatMessages = React.memo(
                       <span>
                         {moment(e.createdAt).format("hh:mm A . MMM D")}
                       </span>
+                      {/* Edited indicator */}
+                      {e.isEdited && (
+                        <span
+                          className="text-gray-500 italic"
+                          title={
+                            e.editedAt
+                              ? `Edited at ${moment(e.editedAt).format(
+                                  "hh:mm A"
+                                )}`
+                              : "Edited"
+                          }
+                        >
+                          • edited
+                        </span>
+                      )}
                       {isSentByMe &&
                         (e.seen ? (
                           <div className="flex items-center gap-1 text-blue-400">
@@ -630,5 +684,7 @@ const ChatMessages = React.memo(
     );
   }
 );
+
+ChatMessages.displayName = "ChatMessages";
 
 export default ChatMessages;

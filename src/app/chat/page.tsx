@@ -3,7 +3,7 @@ import ChatSidebar from "@/components/ChatSidebar";
 import Loading from "@/components/Loading";
 import { chat_service, useAppData, User } from "@/context/AppContext";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import Cookies from "js-cookie";
 import axios from "axios";
@@ -11,6 +11,15 @@ import ChatHeader from "@/components/ChatHeader";
 import ChatMessages from "@/components/ChatMessages";
 import MessageInput from "@/components/MessageInput";
 import { SocketData } from "@/context/SocketContext";
+
+export interface LinkPreview {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  siteName?: string;
+  favicon?: string;
+}
 
 export interface Message {
   _id: string;
@@ -42,6 +51,22 @@ export interface Message {
       publicId: string;
     };
   };
+  isEdited?: boolean;
+  editedAt?: Date;
+  linkPreview?: LinkPreview;
+}
+
+// Type for sidebar message display
+interface SidebarMessage {
+  text: string;
+  sender: string;
+  messageType?: "text" | "image" | "deleted" | "reply" | "forward";
+}
+
+// Type for reaction
+interface Reaction {
+  userId: string;
+  emoji: string;
 }
 
 const ChatApp = () => {
@@ -71,6 +96,7 @@ const ChatApp = () => {
   const [replyingToMessage, setReplyingToMessage] = useState<Message | null>(
     null
   );
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [forceScrollToBottom, setForceScrollToBottom] = useState(false);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,7 +159,7 @@ const ChatApp = () => {
     setFilteredMessages(undefined);
   };
 
-  async function fetchChat() {
+  const fetchChat = useCallback(async () => {
     if (!selectedUser) return;
 
     setIsLoadingChat(true); // Show loading state immediately
@@ -165,72 +191,74 @@ const ChatApp = () => {
       toast.error("Failed to load messages");
       setIsLoadingChat(false); // Hide loading state on error too
     }
-  }
+  }, [selectedUser, fetchChats]);
 
-  const moveChatToTop = (
-    chatId: string,
-    newMessage: any,
-    updatedUnseenCount = true
-  ) => {
-    setChats((prev) => {
-      if (!prev) return null;
+  const moveChatToTop = useCallback(
+    (chatId: string, newMessage: SidebarMessage, updatedUnseenCount = true) => {
+      setChats((prev) => {
+        if (!prev) return null;
 
-      const updatedChats = [...prev];
-      const chatIndex = updatedChats.findIndex(
-        (chat) => chat.chat._id === chatId
-      );
+        const updatedChats = [...prev];
+        const chatIndex = updatedChats.findIndex(
+          (chat) => chat.chat._id === chatId
+        );
 
-      if (chatIndex !== -1) {
-        const [moveChat] = updatedChats.splice(chatIndex, 1);
+        if (chatIndex !== -1) {
+          const [moveChat] = updatedChats.splice(chatIndex, 1);
 
-        const updatedChat = {
-          ...moveChat,
-          chat: {
-            ...moveChat.chat,
-            latestMessage: {
-              text:
-                newMessage.messageType === "deleted"
-                  ? "Message deleted"
-                  : newMessage.messageType === "reply"
-                  ? `↩️ ${newMessage.text}`
-                  : newMessage.messageType === "image"
-                  ? "📷 Image"
-                  : newMessage.text,
-              sender: newMessage.sender,
-            },
-            updatedAt: new Date().toString(),
-            unseenCount:
-              updatedUnseenCount && newMessage.sender !== loggedInUser?._id
-                ? (moveChat.chat.unseenCount || 0) + 1
-                : moveChat.chat.unseenCount || 0,
-          },
-        };
-
-        updatedChats.unshift(updatedChat);
-      }
-
-      return updatedChats;
-    });
-  };
-
-  const resetUnseenCount = (chatId: string) => {
-    setChats((prev) => {
-      if (!prev) return null;
-
-      return prev.map((chat) => {
-        if (chat.chat._id === chatId) {
-          return {
-            ...chat,
+          const updatedChat = {
+            ...moveChat,
             chat: {
-              ...chat.chat,
-              unseenCount: 0,
+              ...moveChat.chat,
+              latestMessage: {
+                text:
+                  newMessage.messageType === "deleted"
+                    ? "Message deleted"
+                    : newMessage.messageType === "reply"
+                    ? `↩️ ${newMessage.text}`
+                    : newMessage.messageType === "image"
+                    ? "📷 Image"
+                    : newMessage.text,
+                sender: newMessage.sender,
+              },
+              updatedAt: new Date().toString(),
+              unseenCount:
+                updatedUnseenCount && newMessage.sender !== loggedInUser?._id
+                  ? (moveChat.chat.unseenCount || 0) + 1
+                  : moveChat.chat.unseenCount || 0,
             },
           };
+
+          updatedChats.unshift(updatedChat);
         }
-        return chat;
+
+        return updatedChats;
       });
-    });
-  };
+    },
+    [setChats, loggedInUser?._id]
+  );
+
+  const resetUnseenCount = useCallback(
+    (chatId: string) => {
+      setChats((prev) => {
+        if (!prev) return null;
+
+        return prev.map((chat) => {
+          if (chat.chat._id === chatId) {
+            return {
+              ...chat,
+              chat: {
+                ...chat.chat,
+                unseenCount: 0,
+              },
+            };
+          }
+          return chat;
+        });
+      });
+    },
+    [setChats]
+  );
 
   async function createChat(u: User) {
     try {
@@ -252,12 +280,13 @@ const ChatApp = () => {
       setShowAllUser(false);
       await fetchChats();
     } catch (error) {
+      console.error(error);
       toast.error("Failed to start chat");
     }
   }
 
   const handleMessageSend = async (
-    e: any,
+    e: React.FormEvent,
     imageFile?: File | null,
     replyTo?: string
   ) => {
@@ -359,8 +388,9 @@ const ChatApp = () => {
         },
         false
       );
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || "Something went wrong");
     }
   };
 
@@ -422,14 +452,15 @@ const ChatApp = () => {
         {
           messageType: "deleted",
           text: "",
-          sender: loggedInUser?._id,
+          sender: loggedInUser?._id || "",
         },
         false
       );
 
       console.log("📤 Message deleted successfully:", messageId);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to delete message");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || "Failed to delete message");
     }
   };
 
@@ -439,9 +470,84 @@ const ChatApp = () => {
   };
 
   // ✅ Handle forwarding a message
-  const handleForwardMessage = (message: Message) => {
-    // You can implement a modal or UI for selecting who to forward to
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleForwardMessage = (_message: Message) => {
+    // TODO: Implement modal or UI for selecting who to forward to
     toast.success("Forward feature coming soon!");
+  };
+
+  // ✅ Handle editing a message - opens edit mode
+  const handleEditMessage = (messageToEdit: Message) => {
+    // Check if message is within 15 minutes
+    const messageCreatedAt = new Date(messageToEdit.createdAt).getTime();
+    const currentTime = Date.now();
+    const fifteenMinutesInMs = 15 * 60 * 1000;
+
+    if (currentTime - messageCreatedAt > fifteenMinutesInMs) {
+      toast.error("Messages can only be edited within 15 minutes of sending");
+      return;
+    }
+
+    setEditingMessage(messageToEdit);
+    setMessage(messageToEdit.text || "");
+    setReplyingToMessage(null); // Clear any reply state
+  };
+
+  // ✅ Handle submitting edited message
+  const handleEditSubmit = async (e: React.FormEvent, editedText: string) => {
+    e.preventDefault();
+
+    if (!editingMessage || !editedText.trim()) return;
+    if (!selectedUser) return;
+
+    const token = Cookies.get("token");
+
+    try {
+      await axios.put(
+        `${chat_service}/api/v1/messages/${editingMessage._id}`,
+        { text: editedText.trim() },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Update message locally for immediate feedback
+      setMessages((prev) => {
+        if (!prev) return null;
+        return prev.map((msg) => {
+          if (msg._id === editingMessage._id) {
+            return {
+              ...msg,
+              text: editedText.trim(),
+              isEdited: true,
+              editedAt: new Date(),
+            };
+          }
+          return msg;
+        });
+      });
+
+      // Update chat sidebar if this was the latest message
+      moveChatToTop(
+        selectedUser,
+        {
+          text: editedText.trim(),
+          sender: loggedInUser?._id || "",
+          messageType: editingMessage.messageType,
+        },
+        false
+      );
+
+      setEditingMessage(null);
+      setMessage("");
+
+      console.log("📝 Message edited successfully:", editingMessage._id);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || "Failed to edit message");
+    }
   };
 
   // ✅ Handle adding reaction to a message
@@ -472,7 +578,7 @@ const ChatApp = () => {
       });
 
       console.log("Reaction emitted via socket");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error emitting reaction:", error);
       toast.error("Failed to add reaction");
     }
@@ -574,7 +680,7 @@ const ChatApp = () => {
     // ✅ Listen for reaction updates
     socket?.on(
       "messageReaction",
-      (data: { messageId: string; reactions: any[] }) => {
+      (data: { messageId: string; reactions: Reaction[] }) => {
         console.log("Received reaction update:", data);
         if (selectedUser) {
           setMessages((prev) => {
@@ -594,6 +700,26 @@ const ChatApp = () => {
       }
     );
 
+    // ✅ Listen for edited messages
+    socket?.on("messageEdited", (editedMessage) => {
+      console.log("📝 Received messageEdited event:", editedMessage);
+      if (selectedUser === editedMessage.chatId) {
+        setMessages((prev) => {
+          if (!prev) return null;
+          return prev.map((msg) =>
+            msg._id === editedMessage._id
+              ? {
+                  ...msg,
+                  text: editedMessage.text,
+                  isEdited: true,
+                  editedAt: editedMessage.editedAt,
+                }
+              : msg
+          );
+        });
+      }
+    });
+
     socket?.on("userTyping", (data) => {
       if (data.chatId === selectedUser && data.userId !== loggedInUser?._id) {
         setIsTyping(true);
@@ -611,16 +737,18 @@ const ChatApp = () => {
       socket?.off("messagesSeen");
       socket?.off("messageDeleted");
       socket?.off("messageReaction");
+      socket?.off("messageEdited");
       socket?.off("userTyping");
       socket?.off("userStoppedTyping");
     };
-  }, [socket, selectedUser, setChats, loggedInUser?._id]);
+  }, [socket, selectedUser, setChats, loggedInUser?._id, moveChatToTop]);
 
   useEffect(() => {
     if (selectedUser) {
       // Immediately clear messages to prevent flash
       setMessages(null);
       setReplyingToMessage(null);
+      setEditingMessage(null); // Clear editing state when switching chats
       setIsLoadingChat(true);
 
       // Clear search when switching users
@@ -641,7 +769,7 @@ const ChatApp = () => {
         setFilteredMessages(undefined);
       };
     }
-  }, [selectedUser, socket]);
+  }, [selectedUser, socket, fetchChat, resetUnseenCount]);
 
   useEffect(() => {
     return () => {
@@ -690,6 +818,7 @@ const ChatApp = () => {
             onReplyToMessage={handleReplyToMessage}
             onForwardMessage={handleForwardMessage}
             onAddReaction={handleAddReaction}
+            onEditMessage={handleEditMessage}
             forceScrollToBottom={forceScrollToBottom}
             isLoadingChat={isLoadingChat}
             searchQuery={searchQuery}
@@ -703,8 +832,11 @@ const ChatApp = () => {
             message={message}
             setMessage={handleTyping}
             handleMessageSend={handleMessageSend}
+            handleEditSubmit={handleEditSubmit}
             replyingToMessage={replyingToMessage}
             setReplyingToMessage={setReplyingToMessage}
+            editingMessage={editingMessage}
+            setEditingMessage={setEditingMessage}
           />
         </div>
       </div>
