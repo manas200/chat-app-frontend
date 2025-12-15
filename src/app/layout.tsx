@@ -12,7 +12,7 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
   // This is the KEY fix for keyboards covering inputs
-  interactiveWidget: "resizes-content", 
+  interactiveWidget: "resizes-content",
   themeColor: "#000000",
 };
 
@@ -35,10 +35,8 @@ export default function RootLayout({
       <body className="antialiased">
         <AppProvider>
           <SocketProvider>
-            {/* Ensure the direct child has the dynamic height */}
-            <main className="h-[100dvh] w-full overflow-hidden">
-              {children}
-            </main>
+            {/* Removed overflow-hidden from here - let individual pages control their own scroll */}
+            <main className="min-h-[100dvh] w-full">{children}</main>
           </SocketProvider>
         </AppProvider>
       </body>

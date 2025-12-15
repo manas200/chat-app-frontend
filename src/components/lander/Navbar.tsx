@@ -1,5 +1,5 @@
-import React from 'react';
-import { MessageCircle, Zap } from 'lucide-react';
+import React from "react";
+import { MessageCircle, Zap } from "lucide-react";
 
 interface NavbarProps {
   onSignupClick: () => void;
@@ -21,14 +21,14 @@ const Navbar: React.FC<NavbarProps> = ({ onSignupClick }) => {
               Pulse
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-6">
             <button className="text-gray-300 hover:text-white transition-colors duration-200">
               How it's made
             </button>
             <button
               onClick={onSignupClick}
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 rounded-full text-white font-medium transition-all duration-200 transform hover:scale-105 shadow-lg shadow-blue-500/25"
+              className="px-7 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 rounded-full text-white font-medium transition-all duration-200 transform hover:scale-105 shadow-lg shadow-blue-500/25"
             >
               Sign Up
             </button>
