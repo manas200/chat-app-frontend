@@ -1,6 +1,6 @@
 import { User } from "@/context/AppContext";
-import { Menu, UserCircle, PanelLeftClose, Search, X } from "lucide-react";
-import React, { useState } from "react";
+import { UserCircle, PanelLeftClose, Search, X } from "lucide-react";
+import React, { useState, useMemo } from "react";
 
 interface ChatHeaderProps {
   user: User | null;
@@ -11,6 +11,47 @@ interface ChatHeaderProps {
   onSearchClose?: () => void;
   searchQuery?: string;
 }
+
+// Helper function to format last seen time
+const formatLastSeen = (lastSeenDate: string | Date | undefined): string => {
+  if (!lastSeenDate) return "Offline";
+
+  const lastSeen = new Date(lastSeenDate);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - lastSeen.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return "Last seen just now";
+  }
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `Last seen ${diffInMinutes} ${
+      diffInMinutes === 1 ? "minute" : "minutes"
+    } ago`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `Last seen ${diffInHours} ${
+      diffInHours === 1 ? "hour" : "hours"
+    } ago`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `Last seen ${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
+  }
+
+  // For dates older than a week, show the actual date
+  const options: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  return `Last seen ${lastSeen.toLocaleDateString(undefined, options)}`;
+};
 
 const ChatHeader = ({
   user,
@@ -24,6 +65,17 @@ const ChatHeader = ({
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const isOnlineUser = user && onlineUsers.includes(user._id);
+
+  // Get formatted last seen text
+  const lastSeenText = useMemo(() => {
+    if (!user || isOnlineUser) return null;
+
+    // The API already handles privacy - it won't return lastSeen if user disabled it
+    // If lastSeen is null/undefined, show "Offline"
+    if (!user.lastSeen) return "Offline";
+
+    return formatLastSeen(user.lastSeen);
+  }, [user, isOnlineUser]);
 
   const handleSearchToggle = () => {
     if (isSearchMode) {
@@ -145,7 +197,7 @@ const ChatHeader = ({
                             isOnlineUser ? "text-green-500" : "text-gray-400"
                           }`}
                         >
-                          {isOnlineUser ? "Online" : "Offline"}{" "}
+                          {isOnlineUser ? "Online" : lastSeenText || "Offline"}{" "}
                         </span>
                       </div>
                     )}

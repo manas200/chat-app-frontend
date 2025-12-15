@@ -35,6 +35,11 @@ interface ChatMessagesProps {
   isLoadingChat?: boolean;
   searchQuery?: string;
   filteredMessages?: Message[];
+  // Pagination props
+  hasMoreMessages?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
+  totalMessages?: number;
 }
 
 const ChatMessages = React.memo(
@@ -51,6 +56,10 @@ const ChatMessages = React.memo(
     isLoadingChat,
     searchQuery = "",
     filteredMessages,
+    hasMoreMessages = false,
+    isLoadingMore = false,
+    onLoadMore,
+    totalMessages = 0,
   }: ChatMessagesProps) => {
     const { socket } = SocketData();
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -323,7 +332,7 @@ const ChatMessages = React.memo(
     };
 
     return (
-      <div className="flex-1 overflow-hidden ">
+      <div className="flex-1 overflow-hidden chat-doodle-bg rounded-xl">
         <div
           ref={scrollRef}
           className={`h-full w-full overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 chat-scroll flex flex-col ${
@@ -365,6 +374,33 @@ const ChatMessages = React.memo(
             </div>
           ) : (
             <>
+              {/* Load More Button - shown at the top when there are more messages */}
+              {hasMoreMessages && (
+                <div className="flex justify-center py-2">
+                  <button
+                    onClick={onLoadMore}
+                    disabled={isLoadingMore}
+                    className="px-4 py-2 text-sm text-blue-400 hover:text-blue-300 bg-gray-800/50 hover:bg-gray-800 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                        Loading older messages...
+                      </>
+                    ) : (
+                      <>
+                        ↑ Load older messages
+                        {totalMessages > 0 && (
+                          <span className="text-gray-500 text-xs">
+                            ({uniqueMessages.length}/{totalMessages})
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
               {/* --- ADDED: Empty State for new chats --- */}
               {uniqueMessages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400/50">

@@ -1,5 +1,44 @@
 @import "tailwindcss";
 
+/* WhatsApp-like Chat Doodle Background */
+.chat-doodle-bg {
+  position: relative;
+  background: transparent;
+}
+
+.chat-doodle-bg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("/chat-doodle.svg");
+  background-repeat: repeat;
+  background-size: 600px 600px;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chat-doodle-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Responsive doodle sizing */
+@media (max-width: 640px) {
+  .chat-doodle-bg::before {
+    background-size: 450px 450px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .chat-doodle-bg::before {
+    background-size: 650px 650px;
+  }
+}
+
 /* WhatsApp-like scrollbar */
 .chat-scroll::-webkit-scrollbar {
   width: 6px;
@@ -28,4 +67,724 @@
 .chat-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   💕 COUPLE'S PINK THEME - Cute Baby Pink Theme for You Two 💕
+   
+   Color Palette (From Reference Image):
+   - Hot Pink (Dark):     #C94B7C (sidebar, borders)
+   - Vibrant Pink:        #E8598B (accents, buttons)  
+   - Medium Pink:         #EA6B98 (surfaces)
+   - Soft Pink:           #F299B4 (hover states)
+   - Baby Pink:           #FBCED8 (light backgrounds)
+   - Light Pink:          #FDE8ED (chat area)
+   - Text on dark:        #FFFFFF
+   - Text on light:       #C94B7C
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Smooth transition */
+.pink-theme-transition {
+  transition: background 0.3s ease;
+}
+
+/* ═══════════════════════════════════════
+   ROOT CONTAINER
+   ═══════════════════════════════════════ */
+.pink-theme {
+  background: linear-gradient(135deg, #c94b7c 0%, #e8598b 100%) !important;
+}
+
+/* ═══════════════════════════════════════
+   SIDEBAR - Using aside element
+   ═══════════════════════════════════════ */
+.pink-theme aside {
+  background: linear-gradient(180deg, #c94b7c 0%, #d4638e 100%) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Sidebar header border */
+.pink-theme aside > div:first-child {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Sidebar icon container - pink gradient instead of blue-cyan */
+.pink-theme aside .bg-gradient-to-r {
+  background: linear-gradient(135deg, #fbced8 0%, #fde8ed 100%) !important;
+}
+
+/* Make icon visible on light bg */
+.pink-theme aside .bg-gradient-to-r svg {
+  color: #c94b7c !important;
+}
+
+/* Sidebar buttons (new chat, close, etc) */
+.pink-theme aside button.bg-gradient-to-r {
+  background: linear-gradient(135deg, #fbced8 0%, #ffffff 100%) !important;
+}
+
+.pink-theme aside button.bg-gradient-to-r svg {
+  color: #c94b7c !important;
+}
+
+.pink-theme aside button.bg-gradient-to-r:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #fbced8 100%) !important;
+}
+
+/* Sidebar red button (X when in "new chat" mode) */
+.pink-theme aside button.bg-red-600 {
+  background: #e8598b !important;
+}
+
+.pink-theme aside button.bg-red-600:hover {
+  background: #d4638e !important;
+}
+
+/* Search input in sidebar */
+.pink-theme aside input {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.pink-theme aside input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Chat list items */
+.pink-theme aside button.border {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.pink-theme aside button.border:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Selected chat - lighter pink */
+.pink-theme aside button.bg-gradient-to-r.from-blue-600 {
+  background: linear-gradient(135deg, #e8598b 0%, #c94b7c 100%) !important;
+}
+
+.pink-theme aside button.bg-gradient-to-r.from-blue-600 span,
+.pink-theme aside button.bg-gradient-to-r.from-blue-600 .text-white {
+  color: #f5e4ea !important;
+}
+
+/* Avatar circle in sidebar */
+.pink-theme aside .bg-gray-700 {
+  background: rgba(255, 255, 255, 0.134) !important;
+}
+
+/* Online indicator ring */
+.pink-theme aside .border-gray-800 {
+  border-color: #dea7bc !important;
+}
+
+/* Text colors in sidebar */
+.pink-theme aside .text-white,
+.pink-theme aside .text-gray-200 {
+  color: #ffffff !important;
+}
+
+.pink-theme aside .text-gray-300,
+.pink-theme aside .text-gray-400 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Arrow icons in chat preview */
+.pink-theme aside .text-blue-400 {
+  color: #fbced8 !important;
+}
+
+.pink-theme aside .text-green-400 {
+  color: #e33e78 !important;
+}
+
+/* Profile and Logout at bottom */
+.pink-theme aside a,
+.pink-theme aside > button {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.pink-theme aside a:hover,
+.pink-theme aside > button:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ═══════════════════════════════════════
+   MAIN CHAT AREA - Baby Pink Background!
+   ═══════════════════════════════════════ */
+.pink-theme > div.flex-1 {
+  background: linear-gradient(
+    145deg,
+    #fde8ed 0%,
+    #fbced8 50%,
+    #f8b4c8 100%
+  ) !important;
+}
+
+/* ═══════════════════════════════════════
+   CHAT HEADER
+   ═══════════════════════════════════════ */
+.pink-theme > div.flex-1 > div:first-child {
+  background: transparent !important;
+}
+
+/* Header text - Dark pink on light bg */
+.pink-theme > div.flex-1 > div:first-child .text-white {
+  color: #c94b7c !important;
+}
+
+.pink-theme > div.flex-1 > div:first-child .text-gray-400 {
+  color: #d4638e !important;
+}
+
+/* Header icons */
+.pink-theme > div.flex-1 svg {
+  color: #c48da2 !important;
+}
+
+/* Keep green online indicator */
+.pink-theme .text-green-400 {
+  color: #c75594 !important;
+}
+
+/* ═══════════════════════════════════════
+   MESSAGE BUBBLES - SENT (Your messages) - Keep the nice gradient
+   ═══════════════════════════════════════ */
+.pink-theme .bg-gradient-to-r.from-blue-600,
+.pink-theme .from-blue-600.to-cyan-600 {
+  background: linear-gradient(135deg, #e8598b 0%, #c94b7c 100%) !important;
+}
+
+/* Ensure sent message text is white */
+.pink-theme .bg-gradient-to-r.from-blue-600 *,
+.pink-theme .from-blue-600.to-cyan-600 * {
+  color: white !important;
+}
+
+/* ═══════════════════════════════════════
+   MESSAGE BUBBLES - RECEIVED (Their messages) - White/light pink
+   ═══════════════════════════════════════ */
+.pink-theme .bg-white\/10 {
+  background: rgba(217, 78, 169, 0.5) !important;
+  border: 1px solid rgba(232, 111, 157, 0.562) !important;
+  box-shadow: 0 2px 8px rgba(201, 75, 124, 0.1) !important;
+}
+
+/* Received message text - dark pink on white */
+.pink-theme .bg-white\/10 .text-gray-100,
+.pink-theme .bg-white\/10 p,
+.pink-theme .bg-white\/10 span {
+  color: #c94b7c !important;
+}
+
+/* ═══════════════════════════════════════
+   MESSAGE TIMESTAMPS - Dark pink
+   ═══════════════════════════════════════ */
+.pink-theme .text-xs.text-gray-400,
+.pink-theme .text-xs.text-gray-500 {
+  color: #d4638e !important;
+  opacity: 0.9 !important;
+}
+
+/* Check marks */
+.pink-theme .text-blue-400 {
+  color: #c94b7c !important;
+}
+
+/* ═══════════════════════════════════════
+   WELCOME SCREEN (No chat selected)
+   ═══════════════════════════════════════ */
+.pink-theme .text-3xl.text-white {
+  color: #c94b7c !important;
+}
+
+.pink-theme .text-3xl.text-blue-400 {
+  color: #e8598b !important;
+}
+
+.pink-theme .text-lg.text-gray-300 {
+  color: #d4638e !important;
+}
+
+/* ═══════════════════════════════════════
+   INPUT AREA - White/light pink
+   ═══════════════════════════════════════ */
+/* Message input container */
+.pink-theme input[placeholder="Type a message..."] {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(201, 75, 124, 0.3) !important;
+  color: #c94b7c !important;
+}
+
+.pink-theme input[placeholder="Type a message..."]::placeholder {
+  color: #d4638e !important;
+}
+
+.pink-theme input[placeholder="Type a message..."]:focus {
+  border-color: #e8598b !important;
+  box-shadow: 0 0 0 3px rgba(232, 89, 139, 0.2) !important;
+}
+
+/* Send button */
+.pink-theme button.bg-gradient-to-r.from-blue-500,
+.pink-theme button.from-blue-500.to-cyan-500 {
+  background: linear-gradient(135deg, #e8598b 0%, #c94b7c 100%) !important;
+}
+
+.pink-theme button.bg-gradient-to-r.from-blue-500:hover,
+.pink-theme button.from-blue-500.to-cyan-500:hover {
+  background: linear-gradient(135deg, #f299b4 0%, #e8598b 100%) !important;
+}
+
+/* Icon buttons (attach, emoji) */
+.pink-theme button.text-gray-400 {
+  color: #d4638e !important;
+}
+
+.pink-theme button.text-gray-400:hover {
+  color: #c94b7c !important;
+  background: rgba(201, 75, 124, 0.1) !important;
+}
+
+/* ═══════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════ */
+.pink-theme ::-webkit-scrollbar-thumb {
+  background: rgba(236, 72, 153, 0.4) !important;
+}
+
+.pink-theme ::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.6) !important;
+}
+
+/* ═══════════════════════════════════════
+   REACTIONS & REPLY PREVIEW
+   ═══════════════════════════════════════ */
+.pink-theme .border-l-blue-400 {
+  border-left-color: #ec4899 !important;
+}
+
+.pink-theme .bg-blue-500\/10 {
+  background: rgba(236, 72, 153, 0.15) !important;
+}
+
+/* ═══════════════════════════════════════
+   LOAD MORE BUTTON
+   ═══════════════════════════════════════ */
+.pink-theme button.text-blue-400 {
+  color: #f472b6 !important;
+}
+
+.pink-theme button.text-blue-400:hover {
+  color: #ec4899 !important;
+}
+
+.pink-theme .bg-gray-800\/50 {
+  background: rgba(92, 48, 87, 0.5) !important;
+}
+
+/* ═══════════════════════════════════════
+   UNREAD BADGE
+   ═══════════════════════════════════════ */
+.pink-theme .bg-red-600 {
+  background: #ec4899 !important;
+}
+
+/* ═══════════════════════════════════════
+   ONLINE STATUS INDICATOR (Keep Green)
+   ═══════════════════════════════════════ */
+.pink-theme .bg-green-500 {
+  background: #10b981 !important;
+}
+
+/* ═══════════════════════════════════════
+   SELECTION COLOR
+   ═══════════════════════════════════════ */
+.pink-theme ::selection {
+  background: rgba(236, 72, 153, 0.4) !important;
+  color: #fdf2f8 !important;
+}
+
+/* ═══════════════════════════════════════
+   💕 CUTE HEART INDICATOR
+   ═══════════════════════════════════════ */
+.pink-theme::after {
+  content: "💕";
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  font-size: 18px;
+  animation: float-heart 3s ease-in-out infinite;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+@keyframes float-heart {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-8px) scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* ═══════════════════════════════════════
+   MOBILE HEADER BUTTON
+   ═══════════════════════════════════════ */
+.pink-theme .fixed.top-2\.5 button {
+  color: #f472b6 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADDITIONAL FIXES - Targeting specific Tailwind classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════
+   SIDEBAR BACKGROUND FIX
+   ═══════════════════════════════════════ */
+.pink-theme .bg-black\/70,
+.pink-theme .bg-black\/40 {
+  background: linear-gradient(
+    180deg,
+    rgba(74, 37, 69, 0.95) 0%,
+    rgba(61, 31, 53, 0.95) 100%
+  ) !important;
+}
+
+/* Sidebar border */
+.pink-theme .border-white\/10 {
+  border-color: rgba(236, 72, 153, 0.25) !important;
+}
+
+/* Sidebar header divider */
+.pink-theme .border-gray-700 {
+  border-color: rgba(236, 72, 153, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════
+   CHAT AREA BACKGROUND FIX
+   ═══════════════════════════════════════ */
+.pink-theme .bg-gradient-to-br.from-gray-900\/70,
+.pink-theme .from-gray-900\/70.to-black\/70 {
+  background: linear-gradient(
+    145deg,
+    rgba(74, 37, 69, 0.8) 0%,
+    rgba(61, 31, 53, 0.9) 100%
+  ) !important;
+}
+
+/* ═══════════════════════════════════════
+   INPUT FIELD BACKGROUND FIX
+   ═══════════════════════════════════════ */
+.pink-theme .bg-gray-700 {
+  background: rgba(92, 48, 87, 0.8) !important;
+}
+
+.pink-theme .bg-gray-800 {
+  background: rgba(74, 37, 69, 0.9) !important;
+}
+
+.pink-theme input.bg-gray-700,
+.pink-theme .bg-gray-700.rounded-lg {
+  background: rgba(92, 48, 87, 0.7) !important;
+  border: 1px solid rgba(236, 72, 153, 0.3) !important;
+}
+
+.pink-theme input.bg-gray-700:focus {
+  border-color: #ec4899 !important;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2) !important;
+}
+
+/* Search input */
+.pink-theme .bg-gray-800.border.border-gray-700 {
+  background: rgba(92, 48, 87, 0.7) !important;
+  border-color: rgba(236, 72, 153, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════
+   HEADER TEXT COLORS
+   ═══════════════════════════════════════ */
+.pink-theme .text-white {
+  color: #fdf2f8 !important;
+}
+
+.pink-theme .text-gray-100 {
+  color: #fdf2f8 !important;
+}
+
+.pink-theme .text-gray-200 {
+  color: #fce7f3 !important;
+}
+
+.pink-theme .text-gray-300 {
+  color: #fbcfe8 !important;
+}
+
+.pink-theme .text-gray-400 {
+  color: #f9a8d4 !important;
+}
+
+/* ═══════════════════════════════════════
+   PLACEHOLDER COLORS
+   ═══════════════════════════════════════ */
+.pink-theme .placeholder-gray-400::placeholder {
+  color: #f9a8d4 !important;
+}
+
+/* ═══════════════════════════════════════
+   BUTTON HOVER STATES
+   ═══════════════════════════════════════ */
+.pink-theme .hover\:bg-gray-700:hover {
+  background: rgba(236, 72, 153, 0.2) !important;
+}
+
+.pink-theme .hover\:border-gray-600:hover {
+  border-color: rgba(236, 72, 153, 0.4) !important;
+}
+
+/* ═══════════════════════════════════════
+   ICON COLORS
+   ═══════════════════════════════════════ */
+.pink-theme svg.text-gray-300 {
+  color: #f9a8d4 !important;
+}
+
+/* Icons in buttons and inputs */
+.pink-theme .text-gray-300 svg,
+.pink-theme button svg {
+  color: #f472b6 !important;
+}
+
+/* ═══════════════════════════════════════
+   FOCUS STATES
+   ═══════════════════════════════════════ */
+.pink-theme .focus\:border-blue-500:focus {
+  border-color: #ec4899 !important;
+}
+
+/* ═══════════════════════════════════════
+   BACKDROP BLUR CONTAINERS
+   ═══════════════════════════════════════ */
+.pink-theme .backdrop-blur-lg {
+  background: linear-gradient(
+    180deg,
+    rgba(74, 37, 69, 0.92) 0%,
+    rgba(61, 31, 53, 0.95) 100%
+  ) !important;
+}
+
+.pink-theme .backdrop-blur-xl {
+  background: linear-gradient(
+    145deg,
+    rgba(74, 37, 69, 0.85) 0%,
+    rgba(61, 31, 53, 0.9) 100%
+  ) !important;
+}
+
+.pink-theme .backdrop-blur-sm {
+  background: rgba(92, 48, 87, 0.6) !important;
+}
+
+/* ═══════════════════════════════════════
+   EDIT MESSAGE PREVIEW (Amber stays amber)
+   ═══════════════════════════════════════ */
+.pink-theme .border-amber-500 {
+  border-color: #f59e0b !important;
+}
+
+.pink-theme .text-amber-400 {
+  color: #fbbf24 !important;
+}
+
+.pink-theme .border-amber-400 {
+  border-color: #fbbf24 !important;
+}
+
+/* ═══════════════════════════════════════
+   REPLY PREVIEW BOX
+   ═══════════════════════════════════════ */
+.pink-theme .border-l-indigo-500 {
+  border-left-color: #ec4899 !important;
+}
+
+.pink-theme .text-indigo-400 {
+  color: #f472b6 !important;
+}
+
+/* ═══════════════════════════════════════
+   IMAGE PREVIEW
+   ═══════════════════════════════════════ */
+.pink-theme .bg-gray-800.p-2,
+.pink-theme .bg-gray-800.rounded-lg {
+  background: rgba(74, 37, 69, 0.9) !important;
+  border: 1px solid rgba(236, 72, 153, 0.2) !important;
+}
+
+/* ═══════════════════════════════════════
+   EMOJI PICKER (Keep dark theme)
+   ═══════════════════════════════════════ */
+.pink-theme .EmojiPickerReact {
+  --epr-bg-color: #4a2545 !important;
+  --epr-category-label-bg-color: #5c3057 !important;
+  --epr-hover-bg-color: rgba(236, 72, 153, 0.2) !important;
+  --epr-search-input-bg-color: #5c3057 !important;
+  border: 1px solid rgba(236, 72, 153, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════
+   LOADING SPINNER
+   ═══════════════════════════════════════ */
+.pink-theme .border-blue-500 {
+  border-color: #ec4899 !important;
+}
+
+.pink-theme .border-b-blue-500 {
+  border-bottom-color: #ec4899 !important;
+}
+
+.pink-theme .border-b-blue-400 {
+  border-bottom-color: #f472b6 !important;
+}
+
+/* ═══════════════════════════════════════
+   LINK COLORS
+   ═══════════════════════════════════════ */
+.pink-theme a.text-blue-400 {
+  color: #f472b6 !important;
+}
+
+.pink-theme a.text-blue-400:hover {
+  color: #ec4899 !important;
+}
+
+/* ═══════════════════════════════════════
+   MESSAGE INPUT CONTAINER AREA
+   ═══════════════════════════════════════ */
+.pink-theme form.border-t.border-gray-700 {
+  border-color: rgba(236, 72, 153, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════
+   PROFILE & LOGOUT BUTTONS
+   ═══════════════════════════════════════ */
+.pink-theme aside .flex.items-center.gap-2.text-red-500,
+.pink-theme .text-red-500 {
+  color: #f472b6 !important;
+}
+
+.pink-theme .text-red-500:hover {
+  color: #ec4899 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MESSAGE INPUT AREA - COMPLETE FIX
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Input container wrapper - the div with bg-gray-900 */
+.pink-theme .bg-gray-900 {
+  background: rgba(61, 31, 53, 0.95) !important;
+}
+
+/* Input container wrapper */
+.pink-theme form {
+  background: transparent !important;
+}
+
+/* Attachment button (label with bg-gray-700) */
+.pink-theme label.bg-gray-700,
+.pink-theme .bg-gray-700.hover\:bg-gray-600 {
+  background: rgba(92, 48, 87, 0.9) !important;
+  border: 1px solid rgba(236, 72, 153, 0.3) !important;
+}
+
+.pink-theme label.bg-gray-700:hover,
+.pink-theme .bg-gray-700.hover\:bg-gray-600:hover,
+.pink-theme label.cursor-pointer:hover {
+  background: rgba(236, 72, 153, 0.3) !important;
+}
+
+/* Emoji button */
+.pink-theme button.bg-gray-700 {
+  background: rgba(92, 48, 87, 0.9) !important;
+  border: 1px solid rgba(236, 72, 153, 0.3) !important;
+}
+
+.pink-theme button.bg-gray-700:hover {
+  background: rgba(236, 72, 153, 0.3) !important;
+}
+
+/* Hover states for gray-600 */
+.pink-theme .hover\:bg-gray-600:hover {
+  background: rgba(236, 72, 153, 0.3) !important;
+}
+
+/* Text input field */
+.pink-theme input.bg-gray-700.rounded-lg,
+.pink-theme input[type="text"].bg-gray-700 {
+  background: rgba(74, 37, 69, 0.9) !important;
+  border: 1px solid rgba(236, 72, 153, 0.35) !important;
+  color: #fdf2f8 !important;
+}
+
+.pink-theme input.bg-gray-700.rounded-lg:focus,
+.pink-theme input[type="text"].bg-gray-700:focus {
+  background: rgba(74, 37, 69, 0.95) !important;
+  border-color: #ec4899 !important;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.25) !important;
+  outline: none !important;
+}
+
+/* Send button - Blue to Pink gradient */
+.pink-theme button.bg-gradient-to-r.from-blue-500.to-cyan-500,
+.pink-theme .from-blue-500.to-cyan-500 {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 100%) !important;
+}
+
+.pink-theme button.bg-gradient-to-r.from-blue-500.to-cyan-500:hover,
+.pink-theme .hover\:from-blue-600:hover {
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%) !important;
+}
+
+/* Disabled send button */
+.pink-theme button.bg-gradient-to-r:disabled {
+  background: linear-gradient(
+    135deg,
+    rgba(236, 72, 153, 0.4) 0%,
+    rgba(219, 39, 119, 0.4) 100%
+  ) !important;
+  opacity: 0.5 !important;
+}
+
+/* Send button icon color - ensure white */
+.pink-theme button.bg-gradient-to-r svg {
+  color: rgb(255, 255, 255) !important;
+}
+
+/* Icon colors in input area buttons */
+.pink-theme label.bg-gray-700 svg,
+.pink-theme button.bg-gray-700 svg {
+  color: #f472b6 !important;
+}
+
+/* Border colors */
+.pink-theme .border-gray-600 {
+  border-color: rgba(236, 72, 153, 0.3) !important;
+}
+
+/* Image preview close button */
+.pink-theme button.bg-black.rounded-full {
+  background: rgba(74, 37, 69, 0.95) !important;
+  border: 1px solid rgba(236, 72, 153, 0.3) !important;
+}
+
+.pink-theme button.bg-black.rounded-full:hover {
+  background: rgba(236, 72, 153, 0.3) !important;
 }

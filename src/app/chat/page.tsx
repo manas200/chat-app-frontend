@@ -3,7 +3,7 @@ import ChatSidebar from "@/components/ChatSidebar";
 import Loading from "@/components/Loading";
 import { chat_service, useAppData, User } from "@/context/AppContext";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import Cookies from "js-cookie";
 import axios from "axios";
@@ -11,6 +11,7 @@ import ChatHeader from "@/components/ChatHeader";
 import ChatMessages from "@/components/ChatMessages";
 import MessageInput from "@/components/MessageInput";
 import { SocketData } from "@/context/SocketContext";
+import { isCoupleChat } from "@/config/coupleTheme";
 
 export interface LinkPreview {
   url: string;
@@ -104,6 +105,12 @@ const ChatApp = () => {
     Message[] | undefined
   >(undefined);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [totalMessages, setTotalMessages] = useState(0);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -159,14 +166,16 @@ const ChatApp = () => {
     setFilteredMessages(undefined);
   };
 
+  // Fetch initial messages (page 1 - most recent 50 messages)
   const fetchChat = useCallback(async () => {
     if (!selectedUser) return;
 
-    setIsLoadingChat(true); // Show loading state immediately
+    setIsLoadingChat(true);
+    setCurrentPage(1); // Reset to page 1 for new chat
     const token = Cookies.get("token");
     try {
       const { data } = await axios.get(
-        `${chat_service}/api/v1/message/${selectedUser}`,
+        `${chat_service}/api/v1/message/${selectedUser}?page=1&limit=50`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -174,24 +183,62 @@ const ChatApp = () => {
         }
       );
 
+      console.log("📦 Fetched chat data:", {
+        userName: data.user?.name,
+        userId: data.user?._id,
+        lastSeen: data.user?.lastSeen,
+        privacySettings: data.user?.privacySettings,
+      });
+
       setMessages(data.messages);
       setUser(data.user);
+      setHasMoreMessages(data.pagination?.hasMore || false);
+      setTotalMessages(data.pagination?.totalMessages || 0);
       await fetchChats();
 
-      setIsLoadingChat(false); // Hide loading state
+      setIsLoadingChat(false);
 
       // Force scroll to bottom after messages are loaded
       setTimeout(() => {
         setForceScrollToBottom(true);
-        // Reset the force scroll flag after a brief delay
         setTimeout(() => setForceScrollToBottom(false), 200);
       }, 100);
     } catch (error) {
       console.log(error);
       toast.error("Failed to load messages");
-      setIsLoadingChat(false); // Hide loading state on error too
+      setIsLoadingChat(false);
     }
   }, [selectedUser, fetchChats]);
+
+  // Load older messages (pagination)
+  const loadMoreMessages = useCallback(async () => {
+    if (!selectedUser || !hasMoreMessages || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    const nextPage = currentPage + 1;
+    const token = Cookies.get("token");
+
+    try {
+      const { data } = await axios.get(
+        `${chat_service}/api/v1/message/${selectedUser}?page=${nextPage}&limit=50`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Prepend older messages to the beginning
+      setMessages((prev) => [...(data.messages || []), ...(prev || [])]);
+      setCurrentPage(nextPage);
+      setHasMoreMessages(data.pagination?.hasMore || false);
+      setIsLoadingMore(false);
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to load older messages");
+      setIsLoadingMore(false);
+    }
+  }, [selectedUser, hasMoreMessages, isLoadingMore, currentPage]);
 
   const moveChatToTop = useCallback(
     (chatId: string, newMessage: SidebarMessage, updatedUnseenCount = true) => {
@@ -779,11 +826,20 @@ const ChatApp = () => {
     };
   }, [typingTimeOut]);
 
+  // 💕 Check if this is the special couple's chat
+  const isPinkTheme = useMemo(() => {
+    return isCoupleChat(loggedInUser?.email, user?.email);
+  }, [loggedInUser?.email, user?.email]);
+
   if (loading) return <Loading />;
 
   return (
     /* --- UPDATED CLASS HERE: Changed h-screen to h-[100dvh] --- */
-    <div className="flex h-[100dvh] w-full bg-gray-900 text-white relative overflow-hidden">
+    <div
+      className={`flex h-[100dvh] w-full bg-gray-900 text-white relative overflow-hidden pink-theme-transition ${
+        isPinkTheme ? "pink-theme" : ""
+      }`}
+    >
       <ChatSidebar
         sidebarOpen={siderbarOpen}
         setSidebarOpen={setSiderbarOpen}
@@ -823,6 +879,10 @@ const ChatApp = () => {
             isLoadingChat={isLoadingChat}
             searchQuery={searchQuery}
             filteredMessages={filteredMessages}
+            hasMoreMessages={hasMoreMessages}
+            isLoadingMore={isLoadingMore}
+            onLoadMore={loadMoreMessages}
+            totalMessages={totalMessages}
           />
         </div>
 
