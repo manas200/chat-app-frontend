@@ -767,6 +767,24 @@ const ChatApp = () => {
       }
     });
 
+    // ✅ Listen for message updates (link previews)
+    socket?.on("messageUpdated", (updatedMessage) => {
+      console.log("🔗 Received messageUpdated event:", updatedMessage);
+      if (selectedUser === updatedMessage.chatId) {
+        setMessages((prev) => {
+          if (!prev) return null;
+          return prev.map((msg) =>
+            msg._id === updatedMessage._id
+              ? {
+                  ...msg,
+                  linkPreview: updatedMessage.linkPreview,
+                }
+              : msg
+          );
+        });
+      }
+    });
+
     socket?.on("userTyping", (data) => {
       if (data.chatId === selectedUser && data.userId !== loggedInUser?._id) {
         setIsTyping(true);
@@ -785,6 +803,7 @@ const ChatApp = () => {
       socket?.off("messageDeleted");
       socket?.off("messageReaction");
       socket?.off("messageEdited");
+      socket?.off("messageUpdated");
       socket?.off("userTyping");
       socket?.off("userStoppedTyping");
     };
